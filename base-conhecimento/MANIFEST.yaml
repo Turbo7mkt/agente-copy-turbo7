@@ -1,0 +1,98 @@
+# Manifesto da base de conhecimento
+# Mantido pela skill `sync-drive`. Editar à mão só para corrigir triagem.
+
+ultima_sincronizacao: 2026-08-27
+
+arquivos:
+  - titulo: "PROMPT COPYS"
+    drive_id: 1L17kkcZBKaLRudlpftNuRvrtvoFw_FBnRhVzYkILjyk
+    modificado_em: 2026-05-04
+    destino: base-conhecimento/regras/regras-copy.md
+    destino_secundario: base-conhecimento/regras/formatos-entrega.md
+    nota: Prompt padrão de copy. Dividido em regras + formatos de entrega.
+
+  - titulo: "Metodologia Turbo7"
+    drive_id: 1Z3xAxfQOQrIf_F9hkxKaZdCHUEVz6_3x-sabm65Lf2E
+    modificado_em: 2026-07-20
+    destino: base-conhecimento/metodologia/metodologia-turbo7.md
+
+  - titulo: "Diagnóstico - 1° Pilar - MODELO"
+    drive_id: 1w0w9PYcFOQOhMw2VSVAirnse2AtdZ-k0BQGpC3IzJ3U
+    modificado_em: 2026-07-28
+    destino: base-conhecimento/templates/diagnostico-360.md
+
+  - titulo: "COPYS DI CASA"
+    drive_id: 1ZzYXFMnDZqy1FE3qzJbAa2RyGQE3Z7HIunjj_ZgVBu0
+    modificado_em: 2026-08-25
+    destino: base-conhecimento/exemplos/copies-aprovadas.md
+    nota: Copies aprovadas e no ar. Referência de tom.
+
+  - titulo: "Diagnóstico - DiCasa Italínea Moinhos & Higienópolis"
+    drive_id: 1Opl6qWtSrfBp8cIE7142NUL2TbeeJnZ_oiI-BC5q83k
+    modificado_em: 2026-08-24
+    destino: clientes/dicasa-italinea/briefing.md
+
+  - titulo: "Diagnóstico - Preemier Italínea"
+    drive_id: 1EwAwMucHR0A4847E9wTJEOX8tFoOXrROaVxwJX8X35s
+    modificado_em: 2026-08-27
+    destino: clientes/preemier-decore-italinea/briefing.md
+
+# Candidatos mapeados na varredura inicial, ainda não ingeridos.
+# A skill `sync-drive` processa na próxima execução.
+pendentes:
+  - titulo: "Playbook_MetaAds_Italinea_Turbo7"
+    drive_id: 1iz6SKhJr3jJQGYP3OM7w5-9edDH2DThQ-PPUi6jAoU4
+    destino_sugerido: base-conhecimento/playbooks/meta-ads-italinea.md
+  - titulo: "Manual_Rotina_Trafego_Turbo7_v2.1"
+    drive_id: 1BakueYg5AjyKt2mTyCzL62RZd7FpN7wZIEmjEe1oVFo
+    destino_sugerido: base-conhecimento/playbooks/rotina-trafego.md
+  - titulo: "PLAYBOOK OUTBOUND — INSTAGRAM + LINKEDIN"
+    drive_id: 1qQ4ARv2_DpNmpAWd3uQ7WX8lGZs7eTnI2BvxCSQxRW4
+    destino_sugerido: base-conhecimento/playbooks/outbound-instagram-linkedin.md
+  - titulo: "Diagnóstico - Playbook"
+    drive_id: 1xdENz5gJp3d5LHDcW2jEsE7IGkyYctYlddiliZ0fD9s
+    destino_sugerido: base-conhecimento/playbooks/diagnostico-playbook.md
+  - titulo: "Diagnóstico - Mhavi"
+    drive_id: 1efvhXeMrAfZEKl6mIr2ZrEhihbpcm2rqqSOV4Afdumc
+    destino_sugerido: clientes/mhavi/briefing.md
+  - titulo: "Diagnóstico Casa & Cozinha Italínea"
+    drive_id: 1XSG2Pbbo7iWhSuto5aoTJw02dt3VECNfSSJsC68swTg
+    destino_sugerido: clientes/casa-cozinha-italinea/briefing.md
+  - titulo: "Diagnóstico - Decoralle"
+    drive_id: 1zSna5rD1y7JmA1umd9vP4qb6KvFprHx4gsFPgUT_KWU
+    destino_sugerido: clientes/decoralle/briefing.md
+  - titulo: "Diagnóstico - Mobile Prime Italinea"
+    drive_id: 1d7fIhrxEQ7APlG9ZyULlpsCUTQ9Vq4hglfBsKjsaCqI
+    destino_sugerido: clientes/mobile-prime-italinea/briefing.md
+  - titulo: "Planeta Italínea - Diagnóstico"
+    drive_id: 1A7fxpnRFGLHevcHYqw0sFVC-W_Xs152U6NE7voXnQwI
+    destino_sugerido: clientes/planeta-italinea/briefing.md
+  - titulo: "Copys Atlantica"
+    drive_id: 1MiIGNm1_wz21srxb1n7wMdc9VttkWgp3as3zwJ3EAO8
+    destino_sugerido: clientes/atlantica/copies/
+  - titulo: "copys Decoralle"
+    drive_id: 13RRXdvPcxOBOo3PwyQer-QbCID07A-2Eo2uDQ0qYlBk
+    destino_sugerido: clientes/decoralle/copies/
+
+# Avaliados e descartados. Não reprocessar.
+ignorar:
+  - motivo: "Dashboards de métrica, não conhecimento de copy"
+    titulos:
+      - "Métricas STRACT Meta Ads - Clientes"
+      - "Stract - Meta Ads"
+      - "Stract - Google Ads - Dashboard"
+      - "Stract - Clientes Visão Geral"
+      - "Painel Geral Consolidado"
+      - "Central de dados"
+      - "MESTRA TINTIM - Turbo7"
+      - "Turbo 7 Leads"
+      - "Acompanhamento de Agendamentos"
+      - "<Cliente> 🚀 Turbo7 (planilhas de acompanhamento)"
+  - motivo: "Credenciais — nunca versionar no repo"
+    titulos:
+      - "Acessos dos clientes"
+      - "🔐 Acessos dos Clientes — Turbo7"
+      - "Acessos"
+  - motivo: "Documento vazio ou sem identificação"
+    titulos:
+      - "Documento sem título"
