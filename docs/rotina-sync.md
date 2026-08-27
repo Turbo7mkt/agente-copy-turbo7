@@ -2,6 +2,32 @@
 
 Varredura automática do Drive para manter a base de conhecimento em dia.
 
+- **ID da rotina:** `trig_01Max61MfWCS5raH2j7gRfWG`
+- **Nome:** Sync base de conhecimento — Google Drive
+- **Agenda:** `0 11 * * 1-5` (dias úteis, 8h em Brasília)
+- **Modo:** sessão nova a cada disparo, commitando em
+  `claude/copy-agent-system-sttz3y`
+
+> ## ⚠️ Pendência: conector do Google Drive
+>
+> A rotina foi criada, está ativa e vai disparar — mas **ainda não tem o conector
+> do Google Drive anexado**, e sem ele a sessão disparada não enxerga as
+> ferramentas `mcp__Google_Drive__*`. Ou seja: ela roda e não consegue ler o
+> Drive.
+>
+> O motivo é uma limitação de propagação: uma rotina só herda os conectores que a
+> sessão que a criou já carrega, e a sessão que a criou não tinha esse repasse
+> disponível.
+>
+> **Como resolver (1 minuto, precisa ser você):**
+>
+> 1. Abra as rotinas em [claude.ai](https://claude.ai) → Routines
+> 2. Encontre *Sync base de conhecimento — Google Drive*
+> 3. Habilite o conector **Google Drive** nela e salve
+>
+> Enquanto isso não for feito, rode a sincronização manualmente com
+> `/sync-drive` numa sessão que tenha o Drive conectado — a skill é a mesma.
+
 ## O que a rotina faz
 
 A cada disparo, uma sessão nova executa a skill `sync-drive`:
@@ -47,16 +73,19 @@ A rotina aparece em `/routines` no Claude Code, ou pelas ferramentas do
 claude-code-remote:
 
 ```
-list_triggers                                    # ver a rotina e o último run
-update_trigger  trigger_id=<id> enabled=false    # pausar
-update_trigger  trigger_id=<id> cron_expression='0 11 * * 1'   # semanal, segunda
-delete_trigger  trigger_id=<id>                  # remover de vez
+list_triggers
+update_trigger  trigger_id=trig_01Max61MfWCS5raH2j7gRfWG enabled=false
+update_trigger  trigger_id=trig_01Max61MfWCS5raH2j7gRfWG cron_expression='0 11 * * 1'
+delete_trigger  trigger_id=trig_01Max61MfWCS5raH2j7gRfWG
 ```
+
+O segundo comando pausa; o terceiro passa para semanal, só às segundas; o quarto
+remove de vez.
 
 Para rodar fora de hora, sem esperar o agendamento:
 
 ```
-fire_trigger  trigger_id=<id>
+fire_trigger  trigger_id=trig_01Max61MfWCS5raH2j7gRfWG
 ```
 
 Ou simplesmente peça `/sync-drive` numa sessão aberta.

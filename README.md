@@ -83,8 +83,12 @@ python3 scripts/tests/test_lint_copy.py   # 18 testes
 
 ## Rotina automática
 
-Uma rotina agendada varre o Drive nos dias úteis e ingere o que é novo.
-Configuração e como alterar: [`docs/rotina-sync.md`](docs/rotina-sync.md).
+Uma rotina agendada (`trig_01Max61MfWCS5raH2j7gRfWG`) varre o Drive nos dias
+úteis às 8h e ingere o que é novo.
+
+⚠️ Ela ainda precisa do conector do Google Drive habilitado em claude.ai →
+Routines. Detalhes e comandos de gestão em
+[`docs/rotina-sync.md`](docs/rotina-sync.md).
 
 ## Clientes com briefing pronto
 
