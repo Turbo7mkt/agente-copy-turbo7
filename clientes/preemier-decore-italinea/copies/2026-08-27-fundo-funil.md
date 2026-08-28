@@ -29,10 +29,10 @@ ferragem que se repete igual em todo projeto.
 Aqui você aprova o **projeto em 3D antes** de qualquer peça entrar em produção. E
 o valor da sua metragem já está fechado, não é "depois a gente vê":
 
-- Cozinha a partir de **12.900**
-- Casa completa até 40m² — **24.900**
-- 60m² — **34.900**
-- 80m² — **44.900**
+- Cozinha completa — **R$ 12.900**
+- Casa completa até 40m² — **R$ 24.900**
+- Até 60m² — **R$ 34.900**
+- Até 80m² — **R$ 44.900**
 
 ### ✦ CTA
 
@@ -40,6 +40,9 @@ Manda a planta ou as medidas do seu apartamento no WhatsApp.
 A gente devolve o 3D e o valor fechado da sua metragem, sem você sair de casa.
 
 **Botão Meta Ads:** Enviar Mensagem
+
+**Rodapé legal (obrigatório na peça):** Condições válidas para as metragens
+indicadas. Consulte a loja.
 
 ---
 
@@ -66,3 +69,17 @@ A gente devolve o 3D e o valor fechado da sua metragem, sem você sair de casa.
   fala de *processo* (3D aprovado antes), não de perfeição.
 - Geografia recomendada: Itaquera, Guaianases, São Mateus, Cidade Tiradentes.
   **Excluir Aricanduva e Carrão** (território do concorrente de mesma marca).
+
+### Conformidade com a identidade Italínea
+
+Auditado contra a skill `italinea-identidade-visual`
+(`references/ofertas-e-copy.md`):
+
+- Preço no formato canônico `R$ 12.900` — com espaço, ponto de milhar, sem centavos.
+- Todo preço vem **com escopo** ("cozinha completa", "até 40m²"). Preço solto sem
+  escopo gera reclamação e não passa no jurídico.
+- Sem "a partir de" grudado no número — a variação vai no rodapé.
+- **Rodapé legal incluído**, obrigatório em peça com preço.
+- Preço não é o herói: entra como lista de apoio depois do argumento de fábrica,
+  nunca como número gigante ocupando um terço da arte.
+- CTA dentro do tom da marca (convite, não pressão).

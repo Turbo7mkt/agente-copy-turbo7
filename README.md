@@ -73,13 +73,29 @@ foto") — as regras de copy valem igual, só o invólucro muda.
 | `R7-cliche` | "realize o sonho", "a casa dos seus sonhos", "você merece" |
 | `PRECO` | preço, parcela ou desconto em cliente com `usa_preco: false` |
 
+E as regras da identidade Italínea, quando o preço é permitido:
+
+| Código | O que pega |
+| --- | --- |
+| `MARCA-preco-formato` | preço fora do padrão `R$ 34.900` |
+| `MARCA-a-partir-de` | "a partir de" grudado no número |
+| `MARCA-cta` | CTA fora dos aprovados pela marca |
+| `MARCA-rodape` | peça com preço sem rodapé legal |
+
 O linter lê `usa_preco` do briefing irmão automaticamente. Passar nele **não é
 aprovação** — o checklist manual (`base-conhecimento/regras/checklist-qa.md`)
 cobre o que padrão de texto não alcança.
 
 ```bash
-python3 scripts/tests/test_lint_copy.py   # 18 testes
+python3 scripts/tests/test_lint_copy.py   # 30 testes
 ```
+
+## Skills que o agente usa
+
+Além das skills deste repo, o agente depende de **`italinea-identidade-visual`**
+(skill da conta) como autoridade da marca. O mapa completo — o que é obrigatório,
+o que é útil, e o que foi avaliado e descartado — está em
+[`docs/skills.md`](docs/skills.md).
 
 ## Rotina automática
 

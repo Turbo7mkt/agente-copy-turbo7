@@ -32,6 +32,19 @@ Prova sem origem rastreável não entra em anúncio.
 
 Subagente `revisor-copy`: auditoria adversarial antes de entregar ao cliente.
 
+### Dependência externa obrigatória
+
+**`italinea-identidade-visual`** (skill da conta, não deste repo) é a autoridade
+da marca: formato de preço, rodapé legal, CTAs aprovados, tom da rede, gabaritos
+e fontes. A skill `copy` a invoca sempre.
+
+Precedência: divergiu em **forma** (como escrever preço, que CTA usar), a marca
+vence; divergiu em **fato** (prazo desta loja, nota dela), o briefing vence — a
+marca não conhece a loja.
+
+Mapa completo de skills, incluindo o que foi avaliado e descartado:
+[`docs/skills.md`](docs/skills.md).
+
 ## Estrutura
 
 ```

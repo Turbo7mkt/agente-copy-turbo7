@@ -25,6 +25,21 @@
 - [ ] O prazo está declarado em **dias úteis** quando o briefing diz dias úteis?
 - [ ] O nome da loja/unidade está grafado como no briefing?
 
+## Conformidade com a identidade Italínea
+
+Autoridade: skill `italinea-identidade-visual`, `references/ofertas-e-copy.md`.
+Só se aplica quando a copy traz preço, prazo ou condição.
+
+- [ ] Preço no formato `R$ 34.900` — espaço, ponto de milhar, sem centavos?
+- [ ] Todo preço vem acompanhado do **escopo** ("cozinha completa", "até 50 m²")?
+- [ ] Nenhum "a partir de" grudado no número?
+- [ ] **Rodapé legal presente** ("Condições válidas... Consulte a loja.")?
+- [ ] O rodapé reflete o que o cliente confirmou — e não um número inventado?
+- [ ] "Corridos" ou "úteis" mantido exatamente como o cliente informou?
+- [ ] O preço é apoio, não o herói da peça?
+- [ ] O CTA está entre os aprovados pela marca?
+- [ ] "Italínea" visível na comunicação?
+
 ## Verificação automática
 
 Rode o linter antes de fechar a entrega:

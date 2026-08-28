@@ -18,8 +18,45 @@ alta intenção. Executa o pilar 3 da metodologia (Anúncios Persuasivos).
    - `base-conhecimento/regras/angulos.md` — biblioteca de ângulos
    - `base-conhecimento/regras/formatos-entrega.md` — estrutura de saída
    - `base-conhecimento/exemplos/copies-aprovadas.md` — calibragem de tom
-3. **Confira a validade do briefing.** `atualizado_em` com mais de 60 dias? Avise
+3. **Invoque a skill `italinea-identidade-visual`.** Toda loja da carteira é da
+   rede Italínea, e a marca tem regra própria de oferta, preço, rodapé legal e
+   CTA. Leia `references/ofertas-e-copy.md` dela antes de escrever qualquer linha
+   que envolva preço, prazo ou condição. Ver a seção **Identidade Italínea**
+   abaixo.
+4. **Confira a validade do briefing.** `atualizado_em` com mais de 60 dias? Avise
    e ofereça rodar `sync-drive` antes.
+
+## Identidade Italínea — a camada que fica acima do briefing
+
+A skill `italinea-identidade-visual` é a autoridade da marca. Onde ela e o
+briefing divergirem em **forma** (como escrever preço, que CTA usar, que rodapé
+incluir), a marca vence. Onde divergirem em **fato** (qual é o prazo desta loja,
+qual é a nota dela), o briefing vence — a marca não conhece a loja.
+
+Regras que valem em toda copy com preço ou condição:
+
+- **Formato do preço:** `R$ 34.900` — espaço depois do `R$`, ponto de milhar, sem
+  centavos. Nunca `R$34.900`, `34.900` ou `R$ 34.900,00`.
+- **Preço sempre com escopo:** "cozinha completa", "projeto completo até 50 m²".
+  Preço solto sem escopo gera reclamação e não passa no jurídico.
+- **Nada de "a partir de" grudado no número.** Se há variação, ela vai no rodapé.
+- **Rodapé legal é obrigatório** em qualquer peça com preço ou prazo:
+  *"Condições válidas para projetos de até 50 m². Consulte a loja."* — ajustado
+  ao que o cliente confirmou. Se ele não confirmou nada, **pergunte**; não
+  publique número sem ressalva.
+- **Prazo:** manter "corridos" ou "úteis" exatamente como o cliente informou.
+  Trocar um pelo outro é erro de informação, não de estilo.
+- **O preço não é o herói da peça.** Entra como apoio depois do argumento, nunca
+  como número gigante.
+- **CTAs aprovados:** "Solicite seu projeto", "Quero meu projeto", "Venha nos
+  fazer uma visita", "Fale com um projetista". Fora do tom: "Aproveite agora",
+  "Últimas unidades", "Garanta já", "Não perca", "Clique aqui".
+- **Tom da rede:** convite, não pressão. Posicionamento *"Seu projeto de
+  Felicidade"*.
+
+Quando a entrega incluir a **arte** e não só o texto, a skill de marca é
+obrigatória de ponta a ponta — gabarito, layout, fontes, logo e `check-gabarito.py`.
+Peça com qualquer flag do verificador não é entregue.
 
 ## As restrições que mais quebram entrega
 

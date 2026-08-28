@@ -94,6 +94,72 @@ class TestVerificar(unittest.TestCase):
         self.assertEqual([a for a in achados if a.codigo == "R2-urgencia"], [])
 
 
+class TestRegrasDaMarca(unittest.TestCase):
+    """Regras da skill italinea-identidade-visual, só valem com preço liberado."""
+
+    def setUp(self):
+        import tempfile
+
+        self._tmpdir = tempfile.TemporaryDirectory()
+        self.tmp = self._tmpdir.name
+
+    def tearDown(self):
+        self._tmpdir.cleanup()
+
+    def _achados(self, texto, permitir_preco=True):
+        arquivo = Path(self.tmp) / "copy.md"
+        arquivo.write_text(texto, encoding="utf-8")
+        return verificar(arquivo, permitir_preco)
+
+    RODAPE = "Condições válidas para projetos de até 50 m². Consulte a loja.\n"
+
+    def _codigos(self, texto):
+        return {a.codigo for a in self._achados(texto + self.RODAPE)}
+
+    def test_preco_canonico_passa(self):
+        self.assertNotIn("MARCA-preco-formato", self._codigos("Projeto completo por R$ 34.900.\n"))
+
+    def test_pega_preco_sem_cifrao(self):
+        self.assertIn("MARCA-preco-formato", self._codigos("Projeto completo por 34.900.\n"))
+
+    def test_pega_preco_sem_espaco_apos_cifrao(self):
+        self.assertIn("MARCA-preco-formato", self._codigos("Projeto completo por R$34.900.\n"))
+
+    def test_pega_preco_com_centavos(self):
+        self.assertIn("MARCA-preco-formato", self._codigos("Projeto completo por R$ 34.900,00.\n"))
+
+    def test_pega_a_partir_de_grudado_no_numero(self):
+        self.assertIn("MARCA-a-partir-de", self._codigos("Cozinha a partir de R$ 12.900.\n"))
+
+    def test_pega_cta_fora_do_tom(self):
+        self.assertIn("MARCA-cta", self._codigos("R$ 34.900. Clique aqui.\n"))
+
+    def test_cta_aprovado_passa(self):
+        self.assertNotIn("MARCA-cta", self._codigos("R$ 34.900. Venha nos fazer uma visita.\n"))
+
+    def test_exige_rodape_legal_quando_ha_preco(self):
+        achados = self._achados("Projeto completo por R$ 34.900.\n")
+        self.assertTrue(any(a.codigo == "MARCA-rodape" for a in achados))
+
+    def test_rodape_presente_satisfaz(self):
+        achados = self._achados("Projeto completo por R$ 34.900.\n" + self.RODAPE)
+        self.assertEqual([a for a in achados if a.codigo == "MARCA-rodape"], [])
+
+    def test_sem_preco_nao_exige_rodape(self):
+        achados = self._achados("Entrega em 35 dias úteis, garantia de 5 anos.\n")
+        self.assertEqual([a for a in achados if a.codigo == "MARCA-rodape"], [])
+
+    def test_regras_da_marca_nao_valem_sem_preco_liberado(self):
+        # Cliente com usa_preco: false cai na regra PRECO, não nas de formatação
+        achados = self._achados("Cozinha por 34.900.\n", permitir_preco=False)
+        codigos = {a.codigo for a in achados}
+        self.assertNotIn("MARCA-preco-formato", codigos)
+        self.assertNotIn("MARCA-rodape", codigos)
+
+    def test_nao_confunde_metragem_com_preco(self):
+        self.assertNotIn("MARCA-preco-formato", self._codigos("Casa completa até 40m².\n"))
+
+
 class TestLinhasDeCopy(unittest.TestCase):
     def test_remove_conteudo_entre_fences(self):
         texto = "a\n```\nb\n```\nc\n"
