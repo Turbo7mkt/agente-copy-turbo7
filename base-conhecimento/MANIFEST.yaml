@@ -1,7 +1,7 @@
 # Manifesto da base de conhecimento
 # Mantido pela skill `sync-drive`. Editar à mão só para corrigir triagem.
 
-ultima_sincronizacao: 2026-08-27
+ultima_sincronizacao: 2026-08-28
 
 arquivos:
   - titulo: "PROMPT COPYS"
@@ -37,6 +37,31 @@ arquivos:
     modificado_em: 2026-08-27
     destino: clientes/preemier-decore-italinea/briefing.md
 
+  - titulo: "Diagnóstico - Decoralle"
+    drive_id: 1zSna5rD1y7JmA1umd9vP4qb6KvFprHx4gsFPgUT_KWU
+    modificado_em: 2026-08-24
+    destino: clientes/decoralle/briefing.md
+
+  - titulo: "Diagnóstico - Mhavi"
+    drive_id: 1efvhXeMrAfZEKl6mIr2ZrEhihbpcm2rqqSOV4Afdumc
+    modificado_em: 2026-08-26
+    destino: clientes/mhavi/briefing.md
+
+  - titulo: "Diagnóstico Casa & Cozinha Italínea"
+    drive_id: 1XSG2Pbbo7iWhSuto5aoTJw02dt3VECNfSSJsC68swTg
+    modificado_em: 2026-08-27
+    destino: clientes/casa-cozinha-italinea/briefing.md
+
+  - titulo: "Diagnóstico - Mobile Prime Italinea"
+    drive_id: 1d7fIhrxEQ7APlG9ZyULlpsCUTQ9Vq4hglfBsKjsaCqI
+    modificado_em: 2026-07-20
+    destino: clientes/mobile-prime-italinea/briefing.md
+
+  - titulo: "Planeta Italínea - Diagnóstico"
+    drive_id: 1A7fxpnRFGLHevcHYqw0sFVC-W_Xs152U6NE7voXnQwI
+    modificado_em: 2026-08-19
+    destino: clientes/planeta-italinea/briefing.md
+
 # Candidatos mapeados na varredura inicial, ainda não ingeridos.
 # A skill `sync-drive` processa na próxima execução.
 pendentes:
@@ -52,21 +77,6 @@ pendentes:
   - titulo: "Diagnóstico - Playbook"
     drive_id: 1xdENz5gJp3d5LHDcW2jEsE7IGkyYctYlddiliZ0fD9s
     destino_sugerido: base-conhecimento/playbooks/diagnostico-playbook.md
-  - titulo: "Diagnóstico - Mhavi"
-    drive_id: 1efvhXeMrAfZEKl6mIr2ZrEhihbpcm2rqqSOV4Afdumc
-    destino_sugerido: clientes/mhavi/briefing.md
-  - titulo: "Diagnóstico Casa & Cozinha Italínea"
-    drive_id: 1XSG2Pbbo7iWhSuto5aoTJw02dt3VECNfSSJsC68swTg
-    destino_sugerido: clientes/casa-cozinha-italinea/briefing.md
-  - titulo: "Diagnóstico - Decoralle"
-    drive_id: 1zSna5rD1y7JmA1umd9vP4qb6KvFprHx4gsFPgUT_KWU
-    destino_sugerido: clientes/decoralle/briefing.md
-  - titulo: "Diagnóstico - Mobile Prime Italinea"
-    drive_id: 1d7fIhrxEQ7APlG9ZyULlpsCUTQ9Vq4hglfBsKjsaCqI
-    destino_sugerido: clientes/mobile-prime-italinea/briefing.md
-  - titulo: "Planeta Italínea - Diagnóstico"
-    drive_id: 1A7fxpnRFGLHevcHYqw0sFVC-W_Xs152U6NE7voXnQwI
-    destino_sugerido: clientes/planeta-italinea/briefing.md
   - titulo: "Copys Atlantica"
     drive_id: 1MiIGNm1_wz21srxb1n7wMdc9VttkWgp3as3zwJ3EAO8
     destino_sugerido: clientes/atlantica/copies/

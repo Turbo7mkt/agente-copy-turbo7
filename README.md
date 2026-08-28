@@ -41,10 +41,12 @@ Code. Ver [`app/README.md`](app/README.md).
 
 ```bash
 pip install -r app/requirements.txt
-export ANTHROPIC_API_KEY=sk-ant-...
 export APP_SENHA=uma-senha
 uvicorn app.main:app --port 8000
 ```
+
+Não precisa de chave de API: o painel monta o prompt e você cola no Claude que
+já assina. Com `ANTHROPIC_API_KEY` no ambiente, ele também gera sozinho.
 
 Em produção roda na Vercel — passo a passo e as diferenças do serverless em
 [`docs/deploy-vercel.md`](docs/deploy-vercel.md).
@@ -139,10 +141,21 @@ Routines. Detalhes e comandos de gestão em
 
 ## Clientes com briefing pronto
 
-| Cliente | Praça | `usa_preco` | Estratégia |
+| Cliente | `usa_preco` | Ângulos liberados | Estratégia |
 | --- | --- | --- | --- |
-| DiCasa Italínea | Porto Alegre (Moinhos, Higienópolis) | `false` | Reputação, pós-venda, prazo em dias úteis |
-| Preemier Decore Italínea | Itaquera / ZL São Paulo | `true` | Preço fechado por metragem + ser Italínea de fábrica |
+| DiCasa Italínea | `false` | 14 | Reputação, pós-venda, prazo em dias úteis |
+| Mobile Prime Italínea | `true` | 14 | Equipe própria, garantia 5 anos, 60 dias úteis |
+| Planeta Italínea | `true` | 13 | Condição de pagamento longa, foco em público B |
+| Mhavi Planejados | `true` | 12 | Showroom de arquiteto, custo-benefício |
+| Decoralle Planejados | `true` | 11 | Preço por ambiente, lead filtrado por formulário |
+| Preemier Decore Italínea | `true` | 11 | Preço por metragem + ser Italínea de fábrica |
+| Casa & Cozinha Italínea | `false` | 10 | Marca Italínea; sem prova própria ainda |
 
-Os demais diagnósticos do Drive estão mapeados em
-`base-conhecimento/MANIFEST.yaml` sob `pendentes`.
+O número de ângulos liberados não é arbitrário: sai do filtro determinístico
+cruzando a biblioteca com o que cada briefing sustenta. Casa & Cozinha tem 10
+porque não existe perfil no Google da unidade, o pós-venda tem reputação ruim e
+não há tabela de preço confirmada — o sistema esconde o que a loja não pode
+provar, em vez de deixar a copy prometer.
+
+Os playbooks de mídia seguem em `base-conhecimento/MANIFEST.yaml` sob
+`pendentes`.
