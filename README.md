@@ -120,7 +120,9 @@ aprovação** — o checklist manual (`base-conhecimento/regras/checklist-qa.md`
 cobre o que padrão de texto não alcança.
 
 ```bash
-python3 scripts/tests/test_lint_copy.py   # 30 testes
+python3 scripts/tests/test_lint_copy.py   # 30 testes do linter
+python3 app/tests/test_base.py            # 27 do filtro de ângulos
+python3 app/tests/test_prompt.py          # 22 da montagem do prompt
 ```
 
 ## Skills que o agente usa
@@ -147,7 +149,7 @@ Routines. Detalhes e comandos de gestão em
 | Mobile Prime Italínea | `true` | 14 | Equipe própria, garantia 5 anos, 60 dias úteis |
 | Planeta Italínea | `true` | 13 | Condição de pagamento longa, foco em público B |
 | Mhavi Planejados | `true` | 12 | Showroom de arquiteto, custo-benefício |
-| Decoralle Planejados | `true` | 11 | Preço por ambiente, lead filtrado por formulário |
+| Decoralle Planejados | `true` | 12 | Preço por ambiente, showroom em Guarulhos, 5 anos |
 | Preemier Decore Italínea | `true` | 11 | Preço por metragem + ser Italínea de fábrica |
 | Casa & Cozinha Italínea | `false` | 10 | Marca Italínea; sem prova própria ainda |
 

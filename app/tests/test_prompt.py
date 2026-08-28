@@ -48,6 +48,23 @@ class TestMontarSystem(unittest.TestCase):
         prompt = montar_system(carregar_briefing("dicasa-italinea"))
         self.assertIn("usa_preco: false", prompt)
 
+    def test_carrega_todos_os_exemplos_de_tom(self):
+        for marca in ["DiCasa", "Decoralle", "Atlântica"]:
+            self.assertIn(marca, self.prompt, f"exemplo {marca} ausente do prompt")
+
+    def test_cliente_com_preco_ancora_no_exemplo_com_preco(self):
+        """O exemplo mais parecido com o cliente vem primeiro."""
+        prompt = montar_system(carregar_briefing("preemier-decore-italinea"))
+        i_decoralle = prompt.index("Copies aprovadas — Decoralle")
+        i_dicasa = prompt.index("Copies aprovadas — referência de tom")
+        self.assertLess(i_decoralle, i_dicasa)
+
+    def test_cliente_sem_preco_ancora_no_exemplo_sem_preco(self):
+        prompt = montar_system(carregar_briefing("dicasa-italinea"))
+        i_decoralle = prompt.index("Copies aprovadas — Decoralle")
+        i_dicasa = prompt.index("Copies aprovadas — referência de tom")
+        self.assertLess(i_dicasa, i_decoralle)
+
 
 class TestMontarPedido(unittest.TestCase):
     def _angulos(self, slug, numeros):

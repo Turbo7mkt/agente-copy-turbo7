@@ -60,6 +60,26 @@ def _regras_da_marca() -> str:
     return _ler(REGRAS / "identidade-italinea.md")
 
 
+def _exemplos(briefing: Briefing) -> str:
+    """Junta os exemplos de tom, priorizando os do mesmo regime de preço.
+
+    Uma copy de cliente sem preço calibrada por exemplo cheio de "a partir de"
+    sai errada, e vice-versa. O exemplo mais parecido com o cliente vem primeiro,
+    que é onde o modelo ancora mais forte.
+    """
+    pasta = RAIZ / "base-conhecimento" / "exemplos"
+    if not pasta.is_dir():
+        return ""
+
+    arquivos = sorted(pasta.glob("*.md"))
+    com_preco = [a for a in arquivos if "decoralle" in a.name]
+    sem_preco = [a for a in arquivos if a.name == "copies-aprovadas.md"]
+    outros = [a for a in arquivos if a not in com_preco and a not in sem_preco]
+
+    ordem = (com_preco + sem_preco if briefing.usa_preco else sem_preco + com_preco)
+    return "\n\n".join(_ler(a) for a in ordem + outros)
+
+
 def montar_system(briefing: Briefing) -> str:
     """Prompt estável — vai inteiro para o cache."""
     import yaml
@@ -80,7 +100,7 @@ def montar_system(briefing: Briefing) -> str:
         _ler(REGRAS / "formatos-entrega.md"),
         "",
         "## Copies aprovadas — calibragem de tom (nunca copiar frase)",
-        _ler(RAIZ / "base-conhecimento" / "exemplos" / "copies-aprovadas.md"),
+        _exemplos(briefing),
     ]
 
     marca = _regras_da_marca()

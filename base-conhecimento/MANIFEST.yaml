@@ -25,7 +25,24 @@ arquivos:
     drive_id: 1ZzYXFMnDZqy1FE3qzJbAa2RyGQE3Z7HIunjj_ZgVBu0
     modificado_em: 2026-08-25
     destino: base-conhecimento/exemplos/copies-aprovadas.md
-    nota: Copies aprovadas e no ar. Referência de tom.
+    nota: Copies aprovadas e no ar. Referência de tom para cliente sem preço.
+
+  - titulo: "copys Decoralle"
+    drive_id: 13RRXdvPcxOBOo3PwyQer-QbCID07A-2Eo2uDQ0qYlBk
+    modificado_em: 2026-08-17
+    destino: base-conhecimento/exemplos/copies-aprovadas-decoralle.md
+    nota: >
+      Referência de tom para cliente COM preço. Trouxe praça, garantia de 5 anos,
+      100% MDF e showroom, que o diagnóstico não registrava — o briefing da
+      Decoralle foi corrigido a partir daqui. Preço nas peças está desatualizado.
+
+  - titulo: "Copys Atlantica"
+    drive_id: 1MiIGNm1_wz21srxb1n7wMdc9VttkWgp3as3zwJ3EAO8
+    modificado_em: 2026-05-06
+    destino: base-conhecimento/exemplos/copies-aprovadas-atlantica.md
+    nota: >
+      A entrega mais completa da carteira no formato de 10 ângulos. Referência de
+      ESTRUTURA, não só de tom.
 
   - titulo: "Diagnóstico - DiCasa Italínea Moinhos & Higienópolis"
     drive_id: 1Opl6qWtSrfBp8cIE7142NUL2TbeeJnZ_oiI-BC5q83k
@@ -77,12 +94,6 @@ pendentes:
   - titulo: "Diagnóstico - Playbook"
     drive_id: 1xdENz5gJp3d5LHDcW2jEsE7IGkyYctYlddiliZ0fD9s
     destino_sugerido: base-conhecimento/playbooks/diagnostico-playbook.md
-  - titulo: "Copys Atlantica"
-    drive_id: 1MiIGNm1_wz21srxb1n7wMdc9VttkWgp3as3zwJ3EAO8
-    destino_sugerido: clientes/atlantica/copies/
-  - titulo: "copys Decoralle"
-    drive_id: 13RRXdvPcxOBOo3PwyQer-QbCID07A-2Eo2uDQ0qYlBk
-    destino_sugerido: clientes/decoralle/copies/
 
 # Avaliados e descartados. Não reprocessar.
 ignorar:
