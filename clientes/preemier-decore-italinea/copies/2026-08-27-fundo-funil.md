@@ -58,6 +58,12 @@ indicadas. Consulte a loja.
 
 ## Nota de conformidade
 
+- **Ângulo:** "Marca própria ou fábrica?" — *sugerido pelo agente, sem escolha
+  prévia do gestor.* Esta copy foi gerada antes do protocolo de pergunta de
+  ângulo existir. Nas próximas, o ângulo é escolhido pelo gestor.
+- **Base sincronizada em:** 2026-08-27, no mesmo dia da geração. Diagnóstico do
+  cliente lido direto do Drive (`1EwAwMucHR0A4847E9wTJEOX8tFoOXrROaVxwJX8X35s`,
+  modificado em 27/08/2026).
 - `usa_preco: true` — preço liberado neste cliente por decisão do diagnóstico
   (praça de ticket 20 mil, público decide por valor).
 - **Nota do Google deliberadamente fora da copy.** Os dois perfis no mesmo

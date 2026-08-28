@@ -25,6 +25,14 @@ python3 scripts/lint_copy.py <arquivo>
 
 Depois audite manualmente o que o linter não alcança:
 
+**Contra o protocolo** (a seção *Nota de conformidade* do arquivo de copy)
+- A nota declara **qual ângulo foi usado e quem escolheu**? Ausente = o agente
+  escolheu sozinho, o que é REPROVA.
+- A nota declara a **data da última sincronização com o Drive** usada na geração?
+- Essa data tem mais de 7 dias em relação à geração? Então a copy saiu sobre base
+  velha — REPROVA.
+- O ângulo entregue é o mesmo que a nota diz ter sido escolhido?
+
 **Contra o briefing**
 - Alguma prova usada na copy **não** consta do briefing? Cite a linha.
 - Alguma prova marcada com ⚠️ foi usada mesmo assim?

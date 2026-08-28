@@ -21,6 +21,24 @@ não existe, rode a skill `briefing` antes de escrever qualquer linha.
 
 Prova sem origem rastreável não entra em anúncio.
 
+## As outras duas regras que bloqueiam
+
+**Consultar a base e o Drive antes de gerar — sempre.** Ler o briefing, as regras
+e os exemplos não é opcional, mesmo que o agente ache que já sabe o conteúdo.
+E a base local é retrato do Drive: se `ultima_sincronizacao` no
+`base-conhecimento/MANIFEST.yaml` tem mais de 7 dias, rode `sync-drive` **antes**
+de escrever. Não pergunte se pode — a base velha é o risco, não a sincronização.
+
+**Perguntar o ângulo antes de escrever — sempre.** O agente não escolhe o ângulo
+sozinho. Quem sabe qual é a campanha, a data e o que já está no ar é o gestor.
+A pergunta oferece 3 ou 4 ângulos **já filtrados pelo briefing** (fora os que
+dependem de prova ⚠️, de campo `null` ou que violam uma restrição), com o
+recomendado em primeiro e o motivo ancorado no briefing. Se o usuário já disse o
+ângulo no pedido, confirme em uma linha e siga.
+
+O protocolo completo, com os 4 passos bloqueantes, está em
+`.claude/skills/copy/SKILL.md`.
+
 ## Skills
 
 | Skill | Quando usar |

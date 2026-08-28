@@ -39,8 +39,24 @@ precisa vir de um diagnóstico, e todo ângulo precisa ser distinto dos outros n
 ```
 /sync-drive          puxa material novo do Drive para a base
 /briefing Decoralle  converte o diagnóstico do cliente em briefing
-/copy Decoralle      gera as 10 copies a partir do briefing
+/copy Decoralle      gera as copies a partir do briefing
 ```
+
+### O que acontece quando você chama `/copy`
+
+O agente não sai escrevendo. Ele cumpre 4 passos bloqueantes antes:
+
+1. **Consulta a base** — briefing do cliente, as 7 regras, biblioteca de ângulos,
+   formatos, exemplos aprovados e a skill de marca `italinea-identidade-visual`.
+2. **Verifica o Drive** — se `ultima_sincronizacao` tem mais de 7 dias, roda
+   `sync-drive` antes, sem perguntar. Base velha é o risco, não a sincronização.
+3. **Pergunta qual ângulo você quer** — 3 ou 4 opções já filtradas pelo briefing,
+   com o recomendado em primeiro e o motivo ancorado nas provas da loja. Ângulo
+   que depende de prova ⚠️ ou de campo `null` nem aparece na lista.
+4. **Confirma o formato** — 10 completas ou estrutura reduzida.
+
+Já sabe o ângulo? Diga no pedido (`/copy Decoralle ângulo de pós-venda`) e ele
+confirma em uma linha em vez de perguntar.
 
 Depois de gerar, valide:
 

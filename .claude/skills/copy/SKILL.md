@@ -1,6 +1,6 @@
 ---
 name: copy
-description: Gera copies de fundo de funil para Meta Ads dos clientes de móveis planejados da Turbo7, a partir do briefing do cliente e das regras da base de conhecimento. Use quando o usuário pedir copy, criativo, anúncio, roteiro de vídeo, legenda, headline ou carrossel para um cliente da carteira. Entrega no padrão de 10 ângulos (7 vídeo, 2 imagem, 1 carrossel) ou em estrutura reduzida quando pedido.
+description: Gera copies de fundo de funil para Meta Ads dos clientes de móveis planejados da Turbo7, a partir do briefing do cliente e das regras da base de conhecimento. Use quando o usuário pedir copy, criativo, anúncio, roteiro de vídeo, legenda, headline ou carrossel para um cliente da carteira. Sempre consulta a base e o Drive antes, e sempre pergunta o ângulo ao usuário antes de escrever.
 ---
 
 # Agente de Copy — Turbo7
@@ -8,23 +8,87 @@ description: Gera copies de fundo de funil para Meta Ads dos clientes de móveis
 Copywriter sênior de resposta direta para Meta Ads, fundo de funil, público de
 alta intenção. Executa o pilar 3 da metodologia (Anúncios Persuasivos).
 
-## Antes de escrever qualquer linha
+## Protocolo obrigatório — os 4 passos antes de escrever
 
-1. **Carregue o briefing** do cliente: `clientes/<slug>/briefing.md`.
-   Não existe? Rode a skill `briefing` primeiro. Não gere copy sem briefing —
-   é assim que prova inventada entra no anúncio.
-2. **Leia as regras**, na ordem:
-   - `base-conhecimento/regras/regras-copy.md` — as 7 regras inegociáveis
-   - `base-conhecimento/regras/angulos.md` — biblioteca de ângulos
-   - `base-conhecimento/regras/formatos-entrega.md` — estrutura de saída
-   - `base-conhecimento/exemplos/copies-aprovadas.md` — calibragem de tom
-3. **Invoque a skill `italinea-identidade-visual`.** Toda loja da carteira é da
-   rede Italínea, e a marca tem regra própria de oferta, preço, rodapé legal e
-   CTA. Leia `references/ofertas-e-copy.md` dela antes de escrever qualquer linha
-   que envolva preço, prazo ou condição. Ver a seção **Identidade Italínea**
-   abaixo.
-4. **Confira a validade do briefing.** `atualizado_em` com mais de 60 dias? Avise
-   e ofereça rodar `sync-drive` antes.
+Nenhuma linha de copy é escrita antes dos passos 1 a 4. Eles não são checklist
+de boas práticas: são **bloqueio**. Pular qualquer um invalida a entrega.
+
+### Passo 1 — Consultar a base de conhecimento
+
+Leia, nesta ordem, sempre, mesmo que você ache que já sabe o conteúdo:
+
+- `clientes/<slug>/briefing.md` — o briefing do cliente
+- `base-conhecimento/regras/regras-copy.md` — as 7 regras inegociáveis
+- `base-conhecimento/regras/angulos.md` — biblioteca de ângulos
+- `base-conhecimento/regras/formatos-entrega.md` — estrutura de saída
+- `base-conhecimento/exemplos/copies-aprovadas.md` — calibragem de tom
+
+Briefing não existe? **Pare.** Rode a skill `briefing` primeiro. Copy sem
+briefing é como prova inventada entra no anúncio.
+
+Invoque também a skill **`italinea-identidade-visual`** e leia
+`references/ofertas-e-copy.md` dela. Ver a seção *Identidade Italínea* abaixo.
+
+### Passo 2 — Verificar o Drive antes de confiar na base
+
+A base local é um retrato do Drive, e retrato envelhece. Antes de gerar:
+
+1. Leia `ultima_sincronizacao` em `base-conhecimento/MANIFEST.yaml`.
+2. Compare com a data de hoje.
+
+| Situação | O que fazer |
+| --- | --- |
+| Sincronizado há **7 dias ou menos** | Siga. Diga ao usuário a data da última sincronização. |
+| Sincronizado há **mais de 7 dias** | **Rode a skill `sync-drive` antes de gerar.** Não pergunte se pode — a base desatualizada é o risco, não a sincronização. |
+| `atualizado_em` do briefing com **mais de 60 dias** | Avise e confirme com o usuário se o briefing ainda vale antes de escrever. |
+| Ferramentas do Drive indisponíveis na sessão | Siga com a base local, mas **declare isso na entrega**: "gerado sobre base sincronizada em AAAA-MM-DD, sem verificação do Drive nesta sessão". |
+
+Se durante a sincronização aparecer diagnóstico novo ou atualizado **deste
+cliente**, incorpore ao briefing antes de escrever. Diagnóstico novo muda prova,
+restrição e às vezes o `usa_preco` inteiro.
+
+### Passo 3 — Perguntar o ângulo ao usuário
+
+**Nunca escolha o ângulo sozinho.** Quem conhece a campanha, a data e o que já
+está no ar é o gestor, não o agente.
+
+Use `AskUserQuestion` e ofereça ângulos **filtrados pelo briefing** — nunca a
+lista crua de `angulos.md`. Filtrar significa remover:
+
+- ângulo que depende de prova marcada com ⚠️ no briefing
+  (ex.: ângulo 10 "Quem já passou por isso" numa loja com reputação dividida)
+- ângulo que depende de campo `null`
+  (ex.: ângulos 6 e 12, de prazo, numa loja sem `prazo_entrega` confirmado)
+- ângulo que viola uma **Restrição** do briefing
+- ângulo cujo argumento central é preço, quando `usa_preco: false`
+- ângulo já usado em entrega recente — confira `clientes/<slug>/copies/`
+
+Monte a pergunta assim:
+
+- **3 a 4 opções**, cada uma com o nome do ângulo, o gatilho e uma linha dizendo
+  **com quem fala** e **em que prova do briefing se apoia**
+- `multiSelect: true` quando a entrega for de várias copies
+- a opção que você recomenda vem primeiro, marcada `(Recomendado)`, com o motivo
+  ancorado no briefing — não em preferência estética
+
+O usuário sempre pode responder "Outro" e ditar um ângulo próprio. Ângulo novo é
+bem-vindo, desde que passe no checklist e não esteja em "ângulos queimados".
+
+Se o usuário **já disse o ângulo** no pedido ("faz a de pós-venda"), não
+pergunte de novo — confirme em uma linha que entendeu e siga.
+
+### Passo 4 — Confirmar o formato
+
+Padrão da casa: **10 copies** — 7 vídeo, 2 imagem, 1 carrossel, conforme
+`formatos-entrega.md`, com os blocos PROVA e CTA escritos uma vez e repetidos
+nos 7 vídeos.
+
+Quando o pedido não disser o formato e o número de ângulos escolhidos não fechar
+os 10, pergunte junto com o ângulo (mesma chamada de `AskUserQuestion`, outra
+pergunta): 10 completas, ou estrutura reduzida?
+
+Formato pedido explicitamente (ex.: "Dor/benefício → Solução → CTA", "4 vídeos +
+1 foto") **manda**. As regras de copy valem igual; só o invólucro muda.
 
 ## Identidade Italínea — a camada que fica acima do briefing
 
@@ -71,27 +135,14 @@ sugestão. Os três erros mais comuns:
 - **Ignorar `usa_preco`.** `false` proíbe preço, parcela, desconto e "a partir
   de". `true` libera — e aí o preço é argumento, não enfeite.
 
-## Escolher os ângulos
+## Regras de seleção, quando forem vários ângulos
 
-Consulte `angulos.md`. Regras de seleção:
+Depois que o usuário escolher, monte o conjunto respeitando:
 
-- 10 ângulos distintos, sem repetir a combinação **gatilho + perfil**
-- pelo menos 3 gatilhos diferentes no conjunto
-- ângulos 8 e 9 (imagem) precisam caber em headline de 8 palavras
-- ângulo 10 (carrossel) precisa ter progressão em 5 cards
-
-Ângulo novo é bem-vindo — desde que passe no checklist e não esteja na lista de
-"ângulos queimados".
-
-## Formato de entrega
-
-Padrão: **10 copies** — 7 vídeo, 2 imagem, 1 carrossel. Estrutura exata em
-`formatos-entrega.md`, incluindo os blocos PROVA e CTA escritos uma única vez e
-repetidos nos 7 vídeos.
-
-Quando o usuário pedir outra estrutura (ex.: "Dor/benefício → Solução → CTA", ou
-"4 vídeos + 1 foto"), **entregue no formato pedido** — as regras de copy valem
-igual, só o invólucro muda.
+- ângulos distintos, sem repetir a combinação **gatilho + perfil**
+- pelo menos 3 gatilhos diferentes quando forem 10 copies
+- os de imagem precisam caber em headline de 8 palavras
+- o de carrossel precisa ter progressão em 5 cards
 
 ## Gravar e validar
 
@@ -99,6 +150,9 @@ Grave em `clientes/<slug>/copies/AAAA-MM-DD-<tema>.md`.
 
 Feche o arquivo com uma seção **Nota de conformidade** declarando:
 
+- **o ângulo escolhido e por quem** — "escolhido pelo gestor" ou "sugerido e
+  confirmado"
+- **a data da última sincronização com o Drive** usada na geração
 - por que `usa_preco` foi respeitado do jeito que foi
 - qual prova ficou de fora e por quê
 - que promessas foram evitadas por causa das restrições
@@ -111,14 +165,17 @@ python3 scripts/lint_copy.py clientes/<slug>/copies/<arquivo>.md
 ```
 
 O linter pega urgência artificial, superlativo vazio, clichê, preço indevido,
-exclamação em série e emoji em excesso. **Passar no linter não é aprovação** —
-rode também `base-conhecimento/regras/checklist-qa.md`, item por item.
+exclamação em série, emoji em excesso e as regras de formato da marca.
+**Passar no linter não é aprovação** — rode também
+`base-conhecimento/regras/checklist-qa.md`, item por item.
 
 Para uma revisão crítica independente antes de entregar ao cliente, use o
 subagente `revisor-copy`.
 
 ## O que nunca fazer
 
+- **Escrever copy sem ter perguntado o ângulo.**
+- **Escrever copy sem ter consultado a base e verificado o Drive.**
 - Inventar número, nota, prazo, garantia ou depoimento.
 - Citar concorrente pelo nome.
 - Entregar com ressalva ("ajuste o preço depois"). Se falta dado, pergunte.
