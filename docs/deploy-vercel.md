@@ -17,9 +17,10 @@
    prompt, você cola no Claude da sua assinatura, e volta para validar. É o modo
    padrão e não custa nada além da hospedagem.
 
-   Sem `APP_SENHA` o painel fica **aberto para qualquer pessoa com a URL**, e
-   cada geração é uma chamada paga na sua conta. A tela mostra um alerta
-   vermelho enquanto ela não estiver definida.
+   Sem `APP_SENHA` o painel fica **aberto para qualquer pessoa com a URL** — e
+   junto com ele os briefings dos clientes, com análise de concorrência e
+   posicionamento de preço. A tela mostra um alerta vermelho enquanto ela não
+   estiver definida.
 
 3. **Deploy.** A URL sai em `https://<projeto>.vercel.app`.
 
@@ -51,9 +52,12 @@ minutos.
 | Hobby | 60 s | **Não** para 10 copies. Serve para formatos curtos (3 vídeos, Dor/Solução/CTA com 1-2 ângulos) |
 | Pro | 300 s | Sim |
 
-O `vercel.json` já pede `maxDuration: 300`. **No plano Hobby a Vercel reduz para
-60 s em silêncio** — a função é cortada no meio e o painel mostra a saída
-parcial. Se você está no Hobby e precisa das 10 copies, gere pelo Claude Code.
+O `vercel.json` pede `maxDuration: 60`, que é o teto do Hobby e vale nos dois
+planos — pedir 300 no Hobby é **rejeitado na validação e derruba o build**. No
+Pro, suba para 300 se quiser as 10 copies pela geração direta.
+
+O seletor de formato do painel já abre num formato que cabe em 60 s; as 10
+copies ficam por último, rotuladas.
 
 A geração é **streaming** justamente por isso: o texto aparece na tela conforme é
 escrito, então mesmo um corte deixa o que já saiu aproveitável, e a conexão não
@@ -76,8 +80,13 @@ arquivo como alternativa.
 
 ## Custo
 
-Cada clique em "Gerar" é uma chamada paga. Ordem de grandeza por geração de 10
-copies, com `claude-opus-5` ($5 entrada / $25 saída por milhão):
+**No modo padrão (entrega de prompt), o painel não gasta nada além da
+hospedagem.** Montar o prompt é leitura de arquivo; quem escreve é o Claude da
+sua assinatura, que você já paga.
+
+O que segue vale só se você configurar `ANTHROPIC_API_KEY` e usar a geração
+direta. Ordem de grandeza por geração de 10 copies, com `claude-opus-5`
+($5 entrada / $25 saída por milhão):
 
 - entrada: ~15-20 mil tokens (regras + exemplos + briefing) → ~US$ 0,10
 - saída: ~8-12 mil tokens → ~US$ 0,25
@@ -106,8 +115,8 @@ concorrência e posicionamento de preço dos seus clientes.
 
 ```bash
 pip install -r app/requirements.txt
-export ANTHROPIC_API_KEY=sk-ant-...
 export APP_SENHA=opcional-em-local
+export ANTHROPIC_API_KEY=sk-ant-...        # opcional — libera a geração direta
 uvicorn app.main:app --reload --port 8000
 ```
 
