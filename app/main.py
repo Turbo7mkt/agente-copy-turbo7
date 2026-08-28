@@ -60,6 +60,11 @@ class PedidoGeracao(BaseModel):
     salvar: bool = True
 
 
+class PedidoValidacao(BaseModel):
+    slug: str
+    markdown: str = Field(min_length=1)
+
+
 # --------------------------------------------------------------------------
 # Passos 1 e 2
 # --------------------------------------------------------------------------
@@ -134,7 +139,50 @@ def copy(slug: str, arquivo: str) -> dict:
 
 
 # --------------------------------------------------------------------------
-# Passo 4 — gerar (SSE)
+# Passo 4a — montar o prompt (sem API, sem custo)
+# --------------------------------------------------------------------------
+
+@app.post("/api/prompt", dependencies=[Depends(exigir_senha)])
+def prompt(pedido: PedidoGeracao) -> dict:
+    """Devolve o prompt pronto para colar no Claude.
+
+    É o caminho padrão de quem não tem chave de API: o painel cumpre os passos
+    1 a 3 do protocolo — lê a base, checa o frescor, filtra os ângulos — e
+    entrega o prompt montado. Quem escreve é o Claude da assinatura.
+    """
+    b = _briefing(pedido.slug)
+    escolhidos = _validar_angulos(b, pedido.angulos)
+    frescor = base.checar_frescor()
+
+    corpo = geracao.montar_pedido(escolhidos, pedido.formato, pedido.observacao)
+    return {
+        "prompt": f"{geracao.montar_system(b)}\n\n---\n\n{corpo}",
+        "angulos": [a["nome"] for a in escolhidos],
+        "base_sincronizada_em": (
+            str(frescor.ultima_sincronizacao) if frescor.ultima_sincronizacao else None
+        ),
+        "base_status": frescor.status,
+    }
+
+
+@app.post("/api/validar", dependencies=[Depends(exigir_senha)])
+def validar(pedido: PedidoValidacao) -> dict:
+    """Roda o linter sobre a copy que voltou do Claude.
+
+    É o passo que impede a volta manual de virar buraco no protocolo: a copy
+    colada passa exatamente pelas mesmas regras da geração automática.
+    """
+    b = _briefing(pedido.slug)
+    achados = geracao.lintar(pedido.markdown, b.usa_preco)
+    return {
+        "achados": achados,
+        "aprovado_no_linter": not achados,
+        "usa_preco": b.usa_preco,
+    }
+
+
+# --------------------------------------------------------------------------
+# Passo 4b — gerar direto (só com credencial no ambiente)
 # --------------------------------------------------------------------------
 
 @app.post("/api/gerar", dependencies=[Depends(exigir_senha)])

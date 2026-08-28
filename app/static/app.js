@@ -62,8 +62,9 @@ async function carregarStatus() {
       ? `⚠ base há ${s.base.dias} dias sem sincronizar`
       : `base sincronizada em ${s.base.ultima_sincronizacao ?? "—"}`);
 
+    if (s.credencial_no_ambiente) $("gerar").classList.remove("oculto");
+
     const alertas = [];
-    if (!s.credencial_no_ambiente) alertas.push("ANTHROPIC_API_KEY não está definida no servidor.");
     if (!s.protegido_por_senha) alertas.push("Painel sem senha — não deixe assim em produção.");
     if (alertas.length) {
       const box = $("alerta-global");
@@ -202,11 +203,93 @@ async function carregarAngulos(slug) {
 }
 
 function atualizarBotao() {
-  const b = $("gerar");
-  b.disabled = !estado.slug || estado.angulos.size === 0;
-  b.textContent = estado.angulos.size > 1
-    ? `Gerar com ${estado.angulos.size} ângulos`
-    : "Gerar copies";
+  const pronto = Boolean(estado.slug) && estado.angulos.size > 0;
+  const m = $("montar");
+  m.disabled = !pronto;
+  m.textContent = estado.angulos.size > 1
+    ? `Montar prompt com ${estado.angulos.size} ângulos`
+    : "Montar prompt";
+  $("gerar").disabled = !pronto;
+}
+
+/* ---------- Passo 5 — monta o prompt, sem chamar a API ---------- */
+
+function pedidoAtual() {
+  return {
+    slug: estado.slug,
+    angulos: [...estado.angulos],
+    formato: $("formato").value,
+    observacao: $("observacao").value,
+    tema: $("tema").value.trim() || "fundo-funil",
+  };
+}
+
+async function montarPrompt() {
+  const b = $("montar");
+  b.disabled = true;
+  texto($("aviso"), "");
+  try {
+    const r = await api("/api/prompt", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(pedidoAtual()),
+    });
+    $("prompt").textContent = r.prompt;
+    texto($("prompt-meta"),
+      `${r.angulos.join(" · ")} — base de ${r.base_sincronizada_em ?? "data desconhecida"}`);
+    $("p5").classList.remove("oculto");
+    $("p6").classList.remove("oculto");
+    $("p5").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e) {
+    texto($("aviso"), e.message);
+  } finally {
+    b.disabled = false;
+    atualizarBotao();
+  }
+}
+
+/* ---------- Passo 6 — valida a copy que voltou ---------- */
+
+async function validarColada() {
+  const markdown = $("colada").value.trim();
+  texto($("aviso-validar"), "");
+  if (!markdown) {
+    texto($("aviso-validar"), "Cole a copy antes de validar.");
+    return;
+  }
+
+  const b = $("validar");
+  b.disabled = true;
+  try {
+    const r = await api("/api/validar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug: estado.slug, markdown }),
+    });
+
+    const v = $("veredito-colada");
+    if (r.aprovado_no_linter) {
+      v.className = "veredito aprovado";
+      v.innerHTML = `<span class="titulo">Passou no linter</span>
+        <span>Falta o checklist manual antes de entregar ao cliente.</span>`;
+    } else {
+      v.className = "veredito reprovado";
+      const itens = r.achados
+        .map((a) => `<li>linha ${a.linha} · [${escapar(a.codigo)}] ${escapar(a.descricao)}</li>`)
+        .join("");
+      v.innerHTML = `<span class="titulo">${r.achados.length} violação(ões) — não entregue assim</span>
+        <ul>${itens}</ul>`;
+    }
+
+    const link = $("baixar-colada");
+    link.href = URL.createObjectURL(new Blob([markdown], { type: "text/markdown" }));
+    link.download = `${new Date().toISOString().slice(0, 10)}-${estado.slug}.md`;
+    link.classList.remove("oculto");
+  } catch (e) {
+    texto($("aviso-validar"), e.message);
+  } finally {
+    b.disabled = false;
+  }
 }
 
 /* ---------- Passo 4 — consome SSE ---------- */
@@ -310,7 +393,15 @@ function mostrarResultado(r) {
 
 /* ---------- Ligações ---------- */
 
+$("montar").addEventListener("click", montarPrompt);
 $("gerar").addEventListener("click", gerar);
+$("validar").addEventListener("click", validarColada);
+$("copiar-prompt").addEventListener("click", async () => {
+  await navigator.clipboard.writeText($("prompt").textContent);
+  const b = $("copiar-prompt");
+  b.textContent = "Copiado";
+  setTimeout(() => (b.textContent = "Copiar prompt"), 1600);
+});
 $("copiar").addEventListener("click", async () => {
   await navigator.clipboard.writeText($("saida").textContent);
   const b = $("copiar");

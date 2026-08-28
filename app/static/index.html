@@ -102,9 +102,48 @@
     </label>
 
     <div class="acoes">
-      <button id="gerar" class="botao" type="button">Gerar copies</button>
+      <button id="montar" class="botao" type="button">Montar prompt</button>
+      <button id="gerar" class="botao secundario oculto" type="button">Gerar aqui mesmo</button>
       <span id="aviso" class="aviso"></span>
     </div>
+  </section>
+
+  <!-- Passo 5 — entrega do prompt -->
+  <section class="passo oculto" id="p5">
+    <div class="passo-cab">
+      <span class="passo-n">05</span>
+      <h2>Escrever no Claude</h2>
+    </div>
+    <ol class="instrucoes">
+      <li>Copie o prompt abaixo.</li>
+      <li>Cole no Claude — app, claude.ai ou Claude Code. Ele já traz briefing,
+          regras, exemplos e os ângulos que você escolheu.</li>
+      <li>Traga a resposta de volta para o campo de validação.</li>
+    </ol>
+    <div class="saida-acoes">
+      <button id="copiar-prompt" class="botao" type="button">Copiar prompt</button>
+      <span id="prompt-meta" class="salvo"></span>
+    </div>
+    <pre id="prompt" class="saida"></pre>
+  </section>
+
+  <!-- Passo 6 — validação -->
+  <section class="passo oculto" id="p6">
+    <div class="passo-cab">
+      <span class="passo-n">06</span>
+      <h2>Validar a copy</h2>
+    </div>
+    <p class="ajuda">
+      Cole aqui o que o Claude escreveu. Passa pelas mesmas regras da geração
+      automática — a volta manual não abre buraco no protocolo.
+    </p>
+    <textarea id="colada" rows="8" placeholder="Cole aqui a copy que o Claude escreveu…"></textarea>
+    <div class="acoes">
+      <button id="validar" class="botao" type="button">Validar</button>
+      <a id="baixar-colada" class="botao secundario oculto" download>Baixar .md</a>
+      <span id="aviso-validar" class="aviso"></span>
+    </div>
+    <div id="veredito-colada"></div>
   </section>
 
   <!-- Resultado -->

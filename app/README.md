@@ -3,12 +3,29 @@
 Front end web onde o gestor escolhe o cliente, escolhe o ângulo e recebe as
 copies — sem abrir o Claude Code.
 
+## Dois modos, e o padrão não custa nada
+
+O painel funciona **sem chave de API**. Esse é o modo padrão.
+
+**Modo entrega de prompt (sem chave).** O painel cumpre os passos 1 a 3 — lê a
+base, checa o frescor do Drive, filtra os ângulos pelo briefing — e monta o
+prompt completo. Você copia, cola no Claude que já assina (app, claude.ai ou
+Claude Code), e traz a resposta de volta para o campo de validação, onde ela
+passa pelo mesmo linter da geração automática.
+
+**Modo geração direta (com chave).** Se `ANTHROPIC_API_KEY` existir no ambiente,
+aparece também o botão "Gerar aqui mesmo" e o painel escreve sozinho, em
+streaming. Sem a chave, esse botão nem é renderizado.
+
+A diferença é só quem executa a escrita. O protocolo, o filtro e a validação são
+idênticos nos dois.
+
 ## Subir local
 
 ```bash
 pip install -r app/requirements.txt
-export ANTHROPIC_API_KEY=sk-ant-...        # ou rode `ant auth login`
 export APP_SENHA=opcional-em-local
+export ANTHROPIC_API_KEY=sk-ant-...        # opcional — libera a geração direta
 uvicorn app.main:app --reload --port 8000
 ```
 

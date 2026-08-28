@@ -276,3 +276,10 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--azul-vivo);
 }
 
 a.botao { text-decoration: none; display: inline-block; }
+
+/* ---------- Instruções e validação ---------- */
+ol.instrucoes { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+ol.instrucoes li { font-size: 0.9rem; color: var(--ink-suave); }
+ol.instrucoes li::marker { color: var(--azul); font-weight: 600; }
+
+#colada { font-family: var(--mono); font-size: 0.82rem; line-height: 1.6; }

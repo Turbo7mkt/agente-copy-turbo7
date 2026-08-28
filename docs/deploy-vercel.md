@@ -10,8 +10,12 @@
 
    | Variável | Valor | Obrigatória |
    | --- | --- | --- |
-   | `ANTHROPIC_API_KEY` | `sk-ant-...` | sim |
    | `APP_SENHA` | a senha do painel | **sim, em produção** |
+   | `ANTHROPIC_API_KEY` | `sk-ant-...` | **não** — só para geração direta |
+
+   Sem `ANTHROPIC_API_KEY` o painel roda no modo entrega de prompt: monta o
+   prompt, você cola no Claude da sua assinatura, e volta para validar. É o modo
+   padrão e não custa nada além da hospedagem.
 
    Sem `APP_SENHA` o painel fica **aberto para qualquer pessoa com a URL**, e
    cada geração é uma chamada paga na sua conta. A tela mostra um alerta
@@ -33,7 +37,11 @@ histórico.
 Se o histórico versionado for importante no fluxo, a saída é gerar pelo Claude
 Code — que grava e commita — e usar o painel só para as entregas avulsas.
 
-### 2. Timeout de função
+### 2. Timeout de função — só afeta a geração direta
+
+No modo entrega de prompt não existe timeout: montar o prompt é leitura de
+arquivo, responde em milissegundos. O que segue vale só se você configurar
+`ANTHROPIC_API_KEY`.
 
 Uma geração de 10 copies com `claude-opus-5` em `effort: high` leva de 1 a 2
 minutos.
