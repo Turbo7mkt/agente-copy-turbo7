@@ -3,15 +3,25 @@
 Front end web onde o gestor escolhe o cliente, escolhe o ângulo e recebe as
 copies — sem abrir o Claude Code.
 
-## Subir
+## Subir local
 
 ```bash
 pip install -r app/requirements.txt
 export ANTHROPIC_API_KEY=sk-ant-...        # ou rode `ant auth login`
+export APP_SENHA=opcional-em-local
 uvicorn app.main:app --reload --port 8000
 ```
 
 Abra <http://localhost:8000>.
+
+## Deploy
+
+Vercel, com `vercel.json` e `api/index.py` já no repo. Três diferenças de
+comportamento em serverless — filesystem só-leitura, timeout de função e a skill
+de marca ausente — estão em [`../docs/deploy-vercel.md`](../docs/deploy-vercel.md).
+
+**`APP_SENHA` é obrigatória em produção.** Sem ela o painel fica aberto a quem
+tiver a URL, e cada geração é uma chamada paga.
 
 ## A decisão de arquitetura que importa
 

@@ -21,7 +21,23 @@
   </div>
 </header>
 
-<main class="palco">
+<div id="porta" class="porta oculto">
+  <div class="porta-caixa">
+    <h1>Agente de Copy</h1>
+    <p>Painel restrito da Turbo7.</p>
+    <label class="campo">
+      <span>Senha</span>
+      <input id="senha" type="password" autocomplete="current-password">
+    </label>
+    <button id="entrar" class="botao" type="button">Entrar</button>
+    <span id="porta-aviso" class="aviso"></span>
+  </div>
+</div>
+
+<main class="palco oculto" id="palco">
+
+  <div id="alerta-global" class="alerta-global oculto"></div>
+
 
   <!-- Passo 1 -->
   <section class="passo" id="p1">
@@ -100,6 +116,7 @@
     <div id="veredito"></div>
     <div class="saida-acoes">
       <button id="copiar" class="botao secundario" type="button">Copiar markdown</button>
+      <a id="baixar" class="botao secundario oculto" download>Baixar .md</a>
       <span id="arquivo-salvo" class="salvo"></span>
     </div>
     <pre id="saida" class="saida"></pre>

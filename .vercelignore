@@ -1,0 +1,7 @@
+.claude/
+docs/
+app/tests/
+scripts/tests/
+*.md
+!base-conhecimento/**/*.md
+!clientes/**/*.md

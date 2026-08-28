@@ -42,8 +42,12 @@ Code. Ver [`app/README.md`](app/README.md).
 ```bash
 pip install -r app/requirements.txt
 export ANTHROPIC_API_KEY=sk-ant-...
+export APP_SENHA=uma-senha
 uvicorn app.main:app --port 8000
 ```
+
+Em produção roda na Vercel — passo a passo e as diferenças do serverless em
+[`docs/deploy-vercel.md`](docs/deploy-vercel.md).
 
 **Claude Code** — mesma base, mesmas regras, mesmo linter:
 

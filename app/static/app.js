@@ -1,32 +1,79 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
-const estado = { slug: null, angulos: new Set(), cliente: null };
+const estado = { slug: null, angulos: new Set(), cliente: null, gravaNoRepo: true };
 
-async function api(caminho, opcoes) {
-  const r = await fetch(caminho, opcoes);
+const senha = () => sessionStorage.getItem("senha") || "";
+
+async function api(caminho, opcoes = {}) {
+  const r = await fetch(caminho, {
+    ...opcoes,
+    headers: { ...(opcoes.headers || {}), "X-Senha": senha() },
+  });
   const corpo = await r.json().catch(() => ({}));
+  if (r.status === 401) { pedirSenha(); throw new Error("Senha necessária."); }
   if (!r.ok) throw new Error(corpo.detail || `Erro ${r.status}`);
   return corpo;
 }
 
-function texto(el, valor) { el.textContent = valor; }
+const texto = (el, v) => { el.textContent = v; };
 
-/* ---------- Frescor da base (passo 2 do protocolo) ---------- */
+function escapar(s) {
+  const d = document.createElement("div");
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+/* ---------- Porta ---------- */
+
+function pedirSenha() {
+  $("porta").classList.remove("oculto");
+  $("palco").classList.add("oculto");
+}
+
+$("entrar").addEventListener("click", async () => {
+  sessionStorage.setItem("senha", $("senha").value);
+  texto($("porta-aviso"), "");
+  try {
+    await api("/api/clientes");
+    $("porta").classList.add("oculto");
+    $("palco").classList.remove("oculto");
+    iniciar();
+  } catch (e) {
+    texto($("porta-aviso"), e.message);
+  }
+});
+
+$("senha").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") $("entrar").click();
+});
+
+/* ---------- Status ---------- */
 
 async function carregarStatus() {
   try {
-    const s = await api("/api/status");
+    const r = await fetch("/api/status");
+    const s = await r.json();
+    estado.gravaNoRepo = s.grava_no_repo;
+
     const el = $("frescor");
     el.className = `frescor ${s.base.status}`;
     texto(el, s.base.status === "velha"
       ? `⚠ base há ${s.base.dias} dias sem sincronizar`
       : `base sincronizada em ${s.base.ultima_sincronizacao ?? "—"}`);
-    if (!s.api_configurada) {
-      texto($("aviso"), "ANTHROPIC_API_KEY não está definida no servidor.");
+
+    const alertas = [];
+    if (!s.credencial_no_ambiente) alertas.push("ANTHROPIC_API_KEY não está definida no servidor.");
+    if (!s.protegido_por_senha) alertas.push("Painel sem senha — não deixe assim em produção.");
+    if (alertas.length) {
+      const box = $("alerta-global");
+      box.innerHTML = alertas.map((a) => `<div>${escapar(a)}</div>`).join("");
+      box.classList.remove("oculto");
     }
-  } catch (e) {
+    return s;
+  } catch {
     texto($("frescor"), "status indisponível");
+    return null;
   }
 }
 
@@ -47,10 +94,7 @@ async function carregarClientes() {
       b.className = "cartao";
       b.setAttribute("aria-pressed", "false");
       b.dataset.slug = c.slug;
-      b.innerHTML = `
-        <span class="nome"></span>
-        <span class="praca"></span>
-        <span class="meta"></span>`;
+      b.innerHTML = `<span class="nome"></span><span class="praca"></span><span class="meta"></span>`;
       b.querySelector(".nome").textContent = c.nome;
       b.querySelector(".praca").textContent = c.praca || "—";
       b.querySelector(".meta").textContent =
@@ -59,7 +103,7 @@ async function carregarClientes() {
       alvo.appendChild(b);
     }
   } catch (e) {
-    alvo.innerHTML = `<p class="carregando">Falha ao listar: ${e.message}</p>`;
+    alvo.innerHTML = `<p class="carregando">${escapar(e.message)}</p>`;
   }
 }
 
@@ -165,18 +209,24 @@ function atualizarBotao() {
     : "Gerar copies";
 }
 
-/* ---------- Passo 4 ---------- */
+/* ---------- Passo 4 — consome SSE ---------- */
 
 async function gerar() {
   const botao = $("gerar");
   botao.disabled = true;
-  botao.textContent = "Escrevendo… (pode levar 1-2 min)";
+  botao.textContent = "Escrevendo…";
   texto($("aviso"), "");
 
+  $("veredito").innerHTML = "";
+  $("saida").textContent = "";
+  texto($("arquivo-salvo"), "");
+  $("resultado").classList.remove("oculto");
+  $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
+
   try {
-    const r = await api("/api/gerar", {
+    const r = await fetch("/api/gerar", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Senha": senha() },
       body: JSON.stringify({
         slug: estado.slug,
         angulos: [...estado.angulos],
@@ -185,12 +235,49 @@ async function gerar() {
         tema: $("tema").value.trim() || "fundo-funil",
       }),
     });
-    mostrarResultado(r);
+
+    if (!r.ok) {
+      const corpo = await r.json().catch(() => ({}));
+      throw new Error(corpo.detail || `Erro ${r.status}`);
+    }
+
+    await consumirSSE(r);
   } catch (e) {
     texto($("aviso"), e.message);
   } finally {
     botao.disabled = false;
     atualizarBotao();
+  }
+}
+
+async function consumirSSE(resposta) {
+  const leitor = resposta.body.getReader();
+  const decodificador = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await leitor.read();
+    if (done) break;
+    buffer += decodificador.decode(value, { stream: true });
+
+    const blocos = buffer.split("\n\n");
+    buffer = blocos.pop() ?? "";
+
+    for (const bloco of blocos) {
+      const evento = /^event: (.+)$/m.exec(bloco)?.[1];
+      const dados = /^data: (.+)$/m.exec(bloco)?.[1];
+      if (!evento || !dados) continue;
+      const carga = JSON.parse(dados);
+
+      if (evento === "delta") {
+        $("saida").textContent += carga.texto;
+        $("saida").scrollTop = $("saida").scrollHeight;
+      } else if (evento === "fim") {
+        mostrarResultado(carga);
+      } else if (evento === "erro") {
+        texto($("aviso"), carga.mensagem);
+      }
+    }
   }
 }
 
@@ -209,20 +296,19 @@ function mostrarResultado(r) {
       <ul>${itens}</ul>`;
   }
 
+  $("saida").textContent = r.markdown;
   texto($("arquivo-salvo"), r.arquivo
     ? `salvo em clientes/${estado.slug}/copies/${r.arquivo}`
-    : "não salvo");
+    : (estado.gravaNoRepo ? "não salvo" : "servidor só-leitura — baixe o arquivo"));
 
-  $("saida").textContent = r.markdown;
-  $("resultado").classList.remove("oculto");
-  $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
+  const nome = `${new Date().toISOString().slice(0, 10)}-${estado.slug}.md`;
+  const link = $("baixar");
+  link.href = URL.createObjectURL(new Blob([r.markdown], { type: "text/markdown" }));
+  link.download = nome;
+  link.classList.remove("oculto");
 }
 
-function escapar(s) {
-  const d = document.createElement("div");
-  d.textContent = String(s);
-  return d.innerHTML;
-}
+/* ---------- Ligações ---------- */
 
 $("gerar").addEventListener("click", gerar);
 $("copiar").addEventListener("click", async () => {
@@ -232,5 +318,16 @@ $("copiar").addEventListener("click", async () => {
   setTimeout(() => (b.textContent = "Copiar markdown"), 1600);
 });
 
-carregarStatus();
-carregarClientes();
+function iniciar() {
+  carregarClientes();
+}
+
+(async () => {
+  const s = await carregarStatus();
+  if (s && s.protegido_por_senha && !senha()) {
+    pedirSenha();
+  } else {
+    $("palco").classList.remove("oculto");
+    iniciar();
+  }
+})();
