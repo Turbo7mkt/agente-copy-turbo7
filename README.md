@@ -34,7 +34,18 @@ precisa vir de um diagnóstico, e todo ângulo precisa ser distinto dos outros n
                                     entrega ao cliente
 ```
 
-## Uso
+## Duas formas de operar
+
+**Painel web** — o gestor escolhe cliente e ângulo pela tela, sem abrir o Claude
+Code. Ver [`app/README.md`](app/README.md).
+
+```bash
+pip install -r app/requirements.txt
+export ANTHROPIC_API_KEY=sk-ant-...
+uvicorn app.main:app --port 8000
+```
+
+**Claude Code** — mesma base, mesmas regras, mesmo linter:
 
 ```
 /sync-drive          puxa material novo do Drive para a base

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agente de Copy — Turbo7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-in">
+    <div class="marca">
+      <span class="marca-nome">Agente de Copy</span>
+      <span class="marca-sub">Turbo7 · rede Italínea</span>
+    </div>
+    <div id="frescor" class="frescor" aria-live="polite"></div>
+  </div>
+</header>
+
+<main class="palco">
+
+  <!-- Passo 1 -->
+  <section class="passo" id="p1">
+    <div class="passo-cab">
+      <span class="passo-n">01</span>
+      <h2>Cliente</h2>
+    </div>
+    <p class="ajuda">Só aparecem lojas com briefing. Sem briefing, o agente não escreve.</p>
+    <div id="clientes" class="cartoes"><p class="carregando">Carregando clientes…</p></div>
+  </section>
+
+  <!-- Passo 2 -->
+  <section class="passo oculto" id="p2">
+    <div class="passo-cab">
+      <span class="passo-n">02</span>
+      <h2>Briefing</h2>
+    </div>
+    <div id="briefing"></div>
+  </section>
+
+  <!-- Passo 3 -->
+  <section class="passo oculto" id="p3">
+    <div class="passo-cab">
+      <span class="passo-n">03</span>
+      <h2>Ângulo</h2>
+    </div>
+    <p class="ajuda">
+      Escolha um ou mais. A lista já vem filtrada: o que o briefing não sustenta
+      não aparece como opção.
+    </p>
+    <div id="angulos" class="angulos"></div>
+    <details id="bloqueados-box" class="bloqueados">
+      <summary>Ângulos indisponíveis para esta loja <span id="bloqueados-n"></span></summary>
+      <div id="bloqueados"></div>
+    </details>
+  </section>
+
+  <!-- Passo 4 -->
+  <section class="passo oculto" id="p4">
+    <div class="passo-cab">
+      <span class="passo-n">04</span>
+      <h2>Formato</h2>
+    </div>
+    <div class="campos">
+      <label class="campo">
+        <span>Entrega</span>
+        <select id="formato">
+          <option value="10 copies — 7 vídeo, 2 imagem, 1 carrossel">10 copies — 7 vídeo, 2 imagem, 1 carrossel</option>
+          <option value="Estrutura Dor/benefício → Solução → CTA, uma copy por ângulo">Dor/benefício → Solução → CTA</option>
+          <option value="4 roteiros de vídeo + 1 imagem estática">4 vídeos + 1 imagem</option>
+          <option value="3 roteiros de vídeo curtos, até 20 segundos cada">3 vídeos curtos (até 20s)</option>
+        </select>
+      </label>
+      <label class="campo">
+        <span>Tema do arquivo</span>
+        <input id="tema" type="text" value="fundo-funil" spellcheck="false">
+      </label>
+    </div>
+    <label class="campo">
+      <span>Observação para o copywriter <em>(opcional)</em></span>
+      <textarea id="observacao" rows="2" placeholder="Ex.: campanha de setembro, priorizar a unidade de Moinhos"></textarea>
+    </label>
+
+    <div class="acoes">
+      <button id="gerar" class="botao" type="button">Gerar copies</button>
+      <span id="aviso" class="aviso"></span>
+    </div>
+  </section>
+
+  <!-- Resultado -->
+  <section class="passo oculto" id="resultado">
+    <div class="passo-cab">
+      <span class="passo-n">✓</span>
+      <h2>Entrega</h2>
+    </div>
+    <div id="veredito"></div>
+    <div class="saida-acoes">
+      <button id="copiar" class="botao secundario" type="button">Copiar markdown</button>
+      <span id="arquivo-salvo" class="salvo"></span>
+    </div>
+    <pre id="saida" class="saida"></pre>
+  </section>
+
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
