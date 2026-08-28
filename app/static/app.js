@@ -65,7 +65,13 @@ async function carregarStatus() {
     if (s.credencial_no_ambiente) $("gerar").classList.remove("oculto");
 
     const alertas = [];
-    if (!s.protegido_por_senha) alertas.push("Painel sem senha — não deixe assim em produção.");
+    if (s.bloqueado_sem_senha) {
+      alertas.push("APP_SENHA não está definida nas variáveis de ambiente. " +
+        "O painel está bloqueado até que ela seja configurada — nenhum dado de " +
+        "cliente é servido sem senha em produção.");
+    } else if (!s.protegido_por_senha) {
+      alertas.push("Painel sem senha — não deixe assim em produção.");
+    }
     if (alertas.length) {
       const box = $("alerta-global");
       box.innerHTML = alertas.map((a) => `<div>${escapar(a)}</div>`).join("");

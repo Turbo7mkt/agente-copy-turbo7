@@ -38,14 +38,25 @@ app = FastAPI(title="Agente de Copy — Turbo7", version="1.1")
 # Acesso
 # --------------------------------------------------------------------------
 
-def exigir_senha(x_senha: str = Header(default="")) -> None:
-    """Porta única do painel.
+EM_PRODUCAO = bool(os.environ.get("VERCEL"))
 
-    Sem `APP_SENHA` definida, o painel fica aberto — aceitável em localhost,
-    nunca em produção. O deploy na Vercel checa isso em /api/status e a tela
-    avisa em vermelho.
+
+def exigir_senha(x_senha: str = Header(default="")) -> None:
+    """Porta única do painel — falha fechada em produção.
+
+    Em localhost, sem `APP_SENHA` o painel fica aberto: é conveniente e o risco
+    é nulo. Em produção o padrão se inverte — sem senha configurada, nenhum dado
+    sai. Os briefings trazem análise de concorrência e posicionamento de preço
+    dos clientes, e um deploy publicado antes de alguém lembrar da variável de
+    ambiente não pode ser o caminho que expõe isso.
     """
     if not SENHA:
+        if EM_PRODUCAO:
+            raise HTTPException(
+                503,
+                "Painel sem senha configurada. Defina APP_SENHA nas variáveis de "
+                "ambiente da Vercel para liberar o acesso.",
+            )
         return
     if not hmac.compare_digest(x_senha, SENHA):
         raise HTTPException(401, "Senha incorreta.")
@@ -86,6 +97,7 @@ def status() -> dict:
         ),
         "protegido_por_senha": bool(SENHA),
         "grava_no_repo": geracao.escrita_permitida(),
+        "bloqueado_sem_senha": EM_PRODUCAO and not SENHA,
     }
 
 
