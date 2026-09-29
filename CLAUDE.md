@@ -93,6 +93,8 @@ scripts/
 docs/
   painel-artifact.html   cópia versionada do painel publicado como Artifact
   gravar-no-drive.md     o que dá e o que não dá para escrever no Google
+meta-mcp/                projeto à parte: MCP Meta Ads da Turbo7 (Next.js, somente
+                         leitura). Tem CLAUDE.md próprio, que é o plano-mestre dele
 ```
 
 ## Comandos

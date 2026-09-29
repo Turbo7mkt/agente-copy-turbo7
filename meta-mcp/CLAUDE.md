@@ -68,8 +68,11 @@ Roda em paralelo ao desenvolvimento.
 - [x] `resumo_carteira`: todas as contas ativas, do pior para o melhor CPL, com totais, contas sem gasto e erros à parte.
 - [x] Chave secreta na URL, erros traduzidos, retry com backoff, paginação, aviso de dados recentes.
 
-### Fase 3 — Deploy privado e validação dos dados ⬅️ PRÓXIMA
-- [ ] Repositório Git privado (GitHub) com o projeto.
+### Fase 3 — Deploy privado e validação dos dados ⏸️ ADIADA
+> Decisão de 29/09/2026: desenvolver primeiro, só na nuvem (Claude Code na web), e deixar Vercel,
+> domínio e conector para depois. O código vive em `meta-mcp/` do repositório `agente-copy-turbo7`
+> (o app do Claude não pode criar repositórios novos na conta; um repo próprio fica para o deploy).
+- [x] Repositório Git privado (GitHub) com o projeto: provisoriamente em `agente-copy-turbo7/meta-mcp/`.
 - [ ] Projeto no Vercel ligado ao repositório.
 - [ ] Variáveis de ambiente no painel do Vercel (feitas pelo Erick, nunca pelo chat): `META_ACCESS_TOKEN`, `META_API_VERSION`, `MCP_ACCESS_KEY`.
 - [ ] Deployment Protection desligada neste projeto (a chave da URL faz a proteção).
@@ -80,14 +83,14 @@ Roda em paralelo ao desenvolvimento.
 
 **Pronto quando:** o Erick consegue perguntar "como está a carteira nos últimos 7 dias?" no claude.ai e os números batem com o Gerenciador.
 
-### Fase 4 — Regras Turbo7 e ferramentas completas (v0.2 a v0.3)
+### Fase 4 — Regras Turbo7 e ferramentas completas (v0.2 a v0.3) ⬅️ EM ANDAMENTO
 - [ ] Benchmarks de CPL (padrão e por cliente) em `config/turbo7.ts`, ativando o semáforo.
 - [ ] Config por cliente: apelidos, gestor responsável, orçamento mensal, lead actions.
-- [ ] `diagnostico_cliente`: compara com o período anterior equivalente e aponta variações relevantes de CPL, CPM, CTR e frequência; anúncios com gasto e sem lead; conjuntos em aprendizado limitado.
+- [x] `diagnostico_cliente`: compara com o período anterior equivalente e aponta variações relevantes de CPL, CPM, CTR e frequência; anúncios com gasto e sem lead; conjuntos em aprendizado limitado.
 - [ ] `top_anuncios`: melhores e piores anúncios por CPL ou gasto, com nome, texto e link de pré-visualização do criativo.
 - [ ] `gasto_vs_orcamento`: gasto do mês por cliente e ritmo projetado até o fim do mês.
 - [ ] `comparar_periodos`: dois períodos lado a lado para um cliente ou para a carteira.
-- [ ] Testes automatizados (Vitest) com respostas simuladas da Meta, sem chamar a API.
+- [x] Testes automatizados (Vitest) com respostas simuladas da Meta, sem chamar a API (`npm test`; ver `tests/apoio/`).
 - [ ] Relatórios assíncronos de insights para períodos longos.
 - [ ] Respostas sempre enxutas (resumo + top N; detalhe só sob pedido).
 
@@ -127,6 +130,7 @@ Roda em paralelo ao desenvolvimento.
 | Respostas grandes demais | Resumo + top N em todas as ferramentas |
 | Divergência com o dashboard | Definir o dashboard como número oficial para o cliente, ou alinhar a regra (Fase 6) |
 | Versões da API aposentadas | Versão fixada e revisão trimestral |
+| Graph API v26.0 (29/07/2026): restrições valem para todas as versões a partir de 27/10/2026 | Mudanças atingem criação de conjuntos e métricas de Página, não os insights de conta; subir para v26.0 depois da validação e revalidar |
 
 ## 6. Convenções de código
 
@@ -137,8 +141,13 @@ Roda em paralelo ao desenvolvimento.
 - Nunca logar, imprimir ou commitar tokens. `.env*` fica no `.gitignore`.
 - Nenhuma chamada POST/DELETE à Meta até a Fase 7.
 - Ambiente do Erick: Windows. Comandos e instruções devem funcionar no PowerShell.
+- Toda ferramenta nova vem com testes em `tests/`, usando `simularMeta` (nunca a Meta real) e chamando pelo protocolo com `chamar()`. `npm test` também precisa passar antes do commit.
+- Limiares e números de negócio ficam em `config/turbo7.ts`, nunca soltos em `lib/mcp/`.
 
 ## 7. Status
 
-- Versão atual: **0.1.0** (Fase 2 concluída; Fase 3 é a próxima)
-- Pendências do Erick: itens da Fase 1; faixas de CPL para o semáforo.
+- Versão atual: **0.2.0** (Fase 4 em andamento; Fase 3 adiada por decisão do Erick)
+- Feito em 29/09/2026: Vitest com Meta simulada (36 testes) e `diagnostico_cliente`.
+- Próxima ferramenta: `top_anuncios`; depois `gasto_vs_orcamento` (depende do orçamento mensal por cliente) e `comparar_periodos`.
+- Pendências do Erick: itens da Fase 1; faixas de CPL para o semáforo; validar os limiares de `DIAGNOSTICO` em `config/turbo7.ts`; orçamento mensal por cliente.
+- Pontos de atenção: `learning_stage_info` nos conjuntos só foi testado contra resposta simulada; conferir com a Meta real na validação. `npm audit` aponta postcss dentro do Next 15 (build); a correção exige Next 16.
