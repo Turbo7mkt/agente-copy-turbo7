@@ -55,10 +55,20 @@ não serem reavaliados do zero.
 | `postiz` | Agendamento em 28+ plataformas. A operação publica direto no Meta |
 | `zoominfo`, `twilio`, `carta`, `growthbook`, `airtable`, `small-business` | Fora do domínio |
 
-## Lacuna real que sobrou
+## A lacuna do loop — meio caminho andado em 29/09
 
 O que o sistema ainda **não** faz: fechar o loop entre o ângulo entregue e o
-resultado dele. Hoje escrevemos 10 ângulos e não sabemos qual converteu.
+resultado dele. Hoje escrevemos os ângulos e não sabemos qual converteu.
+
+Descobrimos em 29/09 que a fonte já existe e estava sendo descartada. A planilha
+`<Cliente> 🚀 Turbo7` traz, por lead, o `ad_name` que o trouxe e a `Etapa` em que
+parou — de "Fez Contato" a "Comprou". Ligar `ad_name` ao ângulo entregue fecha o
+loop sem conector novo nenhum.
+
+A skill `sync-drive` passou a ingerir essas planilhas **em agregado** (passo 3b),
+e a seguir os links citados nos documentos (passo 3c). Falta a parte de análise:
+cruzar `desempenho.md` com o histórico de `copies/` e dizer qual gatilho performa
+por praça.
 
 A metodologia já aponta isso ("loop de atribuição": lead qualificado no CRM
 devolve evento para Meta CAPI e Google offline). Os conectores para resolver

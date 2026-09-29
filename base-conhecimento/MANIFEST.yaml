@@ -115,7 +115,10 @@ pendentes:
 
 # Avaliados e descartados. Não reprocessar.
 ignorar:
-  - motivo: "Dashboards de métrica, não conhecimento de copy"
+  - motivo: >
+      Consolidados de plataforma, sem atribuição por anúncio. Diferente das
+      planilhas <Cliente> 🚀 Turbo7, que a partir de set/26 SÃO ingeridas em
+      agregado (ver pendentes_desempenho).
     titulos:
       - "Métricas STRACT Meta Ads - Clientes"
       - "Stract - Meta Ads"
@@ -126,7 +129,6 @@ ignorar:
       - "MESTRA TINTIM - Turbo7"
       - "Turbo 7 Leads"
       - "Acompanhamento de Agendamentos"
-      - "<Cliente> 🚀 Turbo7 (planilhas de acompanhamento)"
   - motivo: "Credenciais — nunca versionar no repo"
     titulos:
       - "Acessos dos clientes"
@@ -160,3 +162,20 @@ pendentes_29set:
   - titulo: "Roteiros Andromeda - Diana Prime"
     drive_id: 12AmaVXYccvnLG7fM0WhKnKJZcxb9MdOOg6N_aC3hPDA
     destino_sugerido: base-conhecimento/exemplos/
+
+# Planilhas de cliente — reclassificadas em 29/09.
+# Eram descartadas como dashboard; na verdade trazem ad_name + lead_status por
+# lead, que é a única fonte que liga copy a resultado. Ingerir SÓ EM AGREGADO:
+# nome, e-mail e telefone de lead nunca entram no repositório.
+pendentes_desempenho:
+  - titulo: "Preemier Decore 🚀 Turbo7."
+    drive_id: 1dt5GsMnBpWDQBz8h2wqcGt9FoqK3vMyYr7t4DXHhqxY
+    destino_sugerido: clientes/preemier-decore-italinea/desempenho.md
+    nota: >
+      Lido em 29/09 para desenhar a regra. 23 leads na aba de 03/09, com
+      ad_name ADS 01 / ADS 03 e Etapa até "Comprou". 17 de 23 declararam
+      faixa "de 10 a 20 mil" — confirma o ticket_alvo de 20 mil do briefing.
+      Ainda NÃO agregado para o repo.
+  - titulo: "Pinheiro's 🚀 Turbo7."
+    drive_id: 117ABvey54aJRpSKZvDOLmYr0gjq9P59twSAc0Blg_E0
+    destino_sugerido: clientes/pinheiros/desempenho.md
