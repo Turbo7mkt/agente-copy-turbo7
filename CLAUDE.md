@@ -88,9 +88,11 @@ clientes/
   <slug>/copies/         entregas, uma por data
 scripts/
   lint_copy.py           verificação determinística das regras
-  tests/                 36 testes do linter + 16 da porta JS do painel
+  planilha/              Apps Script que grava a copy na Criativos Turbo7
+  tests/                 36 do linter + 16 da porta JS + 14 do Apps Script
 docs/
   painel-artifact.html   cópia versionada do painel publicado como Artifact
+  gravar-no-drive.md     o que dá e o que não dá para escrever no Google
 ```
 
 ## Comandos
@@ -107,6 +109,9 @@ python3 scripts/tests/test_lint_copy.py
 
 # testes da porta JS do linter — a que roda dentro do painel publicado
 node scripts/tests/test_lint_painel.mjs
+
+# testes do Apps Script que grava na planilha (geração de ID do criativo)
+node scripts/tests/test_gravar_copy.mjs
 ```
 
 ## Convenções

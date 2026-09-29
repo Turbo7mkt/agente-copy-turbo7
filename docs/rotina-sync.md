@@ -3,7 +3,7 @@
 Varredura automática do Drive para manter a base de conhecimento em dia.
 
 - **ID da rotina:** `trig_01Max61MfWCS5raH2j7gRfWG`
-- **Nome:** Sync base de conhecimento — Google Drive
+- **Nome:** Sync do Drive + auditoria da planilha de criativos
 - **Agenda:** `0 11 * * 1-5` (dias úteis, 8h em Brasília)
 - **Modo:** sessão nova a cada disparo, commitando em
   `claude/copy-agent-system-sttz3y`
@@ -29,6 +29,21 @@ Varredura automática do Drive para manter a base de conhecimento em dia.
 > `/sync-drive` numa sessão que tenha o Drive conectado — a skill é a mesma.
 
 ## O que a rotina faz
+
+A cada disparo ela executa **duas tarefas**.
+
+### Tarefa 2 — auditoria da `Criativos Turbo7` (desde 29/09)
+
+Lê a aba `BASE_CRIATIVOS`, roda o linter em toda copy com `Status` em
+`Copy em Aprovação`, `Aprovado` ou `Em Revisão`, e grava o veredito em
+`docs/auditoria-planilha.md`. Também conta quantos criativos passaram do
+`Para ser Entregue Em` sem chegar em `Entregue`.
+
+Ela **só lê e relata**. Não escreve na planilha, não corrige copy da equipe, e
+não commita o texto integral das copies auditadas — só a tabela de veredito.
+Reescrever é decisão do gestor.
+
+### Tarefa 1 — sincronizar a base
 
 A cada disparo, uma sessão nova executa a skill `sync-drive`:
 

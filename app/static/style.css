@@ -209,7 +209,7 @@ p { margin: 0; }
 .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
 .campo { display: flex; flex-direction: column; gap: 5px; font-size: 0.85rem; color: var(--ink-suave); }
 .campo em { color: var(--ink-fraco); font-style: normal; }
-select, input[type="text"], textarea {
+select, input[type="text"], input[type="password"], textarea {
   font: inherit;
   font-size: 0.92rem;
   padding: 9px 11px;
