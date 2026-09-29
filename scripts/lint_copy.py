@@ -34,6 +34,13 @@ MAX_EMOJI_POR_LINHA = 1
 # Blocos de código e citações de referência não são copy entregável.
 FENCE_RE = re.compile(r"^\s*```")
 
+# A nota de conformidade é meta-texto: nela o agente DECLARA o que evitou
+# ("promessas evitadas: excelência", "preço, parcela ou desconto"). Ler essa
+# declaração como violação reprova exatamente a copy que se comportou bem.
+NOTA_CONFORMIDADE_RE = re.compile(
+    r"^#{1,6}\s*Nota de conformidade", re.IGNORECASE | re.MULTILINE
+)
+
 EMOJI_RE = re.compile(
     "["
     "\U0001f300-\U0001f5ff"
@@ -192,10 +199,15 @@ def briefing_permite_preco(arquivo: Path) -> bool:
 
 
 def linhas_de_copy(texto: str) -> list[tuple[int, str]]:
-    """Devolve (nº da linha, conteúdo) ignorando blocos de código."""
+    """Devolve (nº da linha, conteúdo) do que é copy entregável.
+
+    Fora ficam os blocos de código e tudo a partir da nota de conformidade.
+    """
     resultado: list[tuple[int, str]] = []
     dentro_de_fence = False
     for numero, linha in enumerate(texto.splitlines(), start=1):
+        if NOTA_CONFORMIDADE_RE.match(linha):
+            break
         if FENCE_RE.match(linha):
             dentro_de_fence = not dentro_de_fence
             continue
@@ -203,6 +215,15 @@ def linhas_de_copy(texto: str) -> list[tuple[int, str]]:
             continue
         resultado.append((numero, linha))
     return resultado
+
+
+def corpo_da_copy(texto: str) -> str:
+    """O texto sem a nota de conformidade, para as checagens de documento."""
+    achado = NOTA_CONFORMIDADE_RE.search(texto)
+    if not achado:
+        return texto
+    inicio = texto.rfind("\n", 0, achado.start())
+    return texto[: inicio if inicio != -1 else achado.start()]
 
 
 def verificar(arquivo: Path, permitir_preco: bool) -> list[Achado]:
@@ -251,8 +272,10 @@ def verificar(arquivo: Path, permitir_preco: bool) -> list[Achado]:
                     )
                 )
 
-    # Rodapé legal é obrigatório em peça que traz preço.
-    if permitir_preco and PRECO_CANONICO_RE.search(texto) and not RODAPE_LEGAL_RE.search(texto):
+    # Rodapé legal é obrigatório em peça que traz preço. A nota de conformidade
+    # fica de fora: preço citado lá é explicação, não oferta.
+    corpo = corpo_da_copy(texto)
+    if permitir_preco and PRECO_CANONICO_RE.search(corpo) and not RODAPE_LEGAL_RE.search(corpo):
         achados.append(
             Achado(
                 arquivo,

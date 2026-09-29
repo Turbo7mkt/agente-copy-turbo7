@@ -160,10 +160,59 @@ class TestRegrasDaMarca(unittest.TestCase):
         self.assertNotIn("MARCA-preco-formato", self._codigos("Casa completa até 40m².\n"))
 
 
+class TestNotaDeConformidade(unittest.TestCase):
+    """Regressão: a nota declara o que foi evitado, e isso não é violação."""
+
+    def _achados(self, texto, usa_preco=False):
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False, encoding="utf-8") as f:
+            f.write(texto)
+            caminho = Path(f.name)
+        self.addCleanup(lambda: caminho.unlink(missing_ok=True))
+        return verificar(caminho, usa_preco)
+
+    NOTA = (
+        "\n## Nota de conformidade\n\n"
+        "- **Preço, parcela ou desconto:** `usa_preco: false`, nada disso entrou.\n"
+        "- **Promessas evitadas:** excelência de atendimento, o melhor da região.\n"
+        "- Nenhuma urgência artificial: sem últimas vagas, sem corre.\n"
+    )
+
+    def test_nota_nao_gera_violacao(self):
+        texto = "Entregamos em 35 dias úteis com garantia de 5 anos.\n" + self.NOTA
+        self.assertEqual(self._achados(texto), [])
+
+    def test_violacao_antes_da_nota_ainda_pega(self):
+        texto = "Somos a melhor loja! Últimas vagas.\n" + self.NOTA
+        codigos = {a.codigo for a in self._achados(texto)}
+        self.assertIn("R2-superlativo", codigos)
+        self.assertIn("R2-urgencia", codigos)
+
+    def test_preco_na_nota_nao_reprova_cliente_sem_preco(self):
+        """O caso real do Casa & Cozinha em 29/09."""
+        texto = "A gaveta que continua firme depois de anos.\n" + self.NOTA
+        self.assertEqual([a for a in self._achados(texto) if a.codigo == "PRECO"], [])
+
+    def test_preco_so_na_nota_nao_exige_rodape(self):
+        texto = ("Projeto sob medida para o seu espaço.\n"
+                 "\n## Nota de conformidade\n\n"
+                 "- A tabela de R$ 34.900 ficou de fora por decisão do diagnóstico.\n")
+        self.assertEqual([a for a in self._achados(texto, True) if a.codigo == "MARCA-rodape"], [])
+
+    def test_titulo_da_nota_em_qualquer_nivel(self):
+        for nivel in ["#", "##", "###"]:
+            texto = f"Copy limpa.\n\n{nivel} Nota de conformidade\n\nSem excelência aqui.\n"
+            self.assertEqual(self._achados(texto), [], f"nível {nivel} não cortou")
+
+
 class TestLinhasDeCopy(unittest.TestCase):
     def test_remove_conteudo_entre_fences(self):
         texto = "a\n```\nb\n```\nc\n"
         self.assertEqual(linhas_de_copy(texto), [(1, "a"), (5, "c")])
+
+    def test_corta_na_nota_de_conformidade(self):
+        texto = "copy\n\n## Nota de conformidade\n\nexcelência\n"
+        self.assertEqual([l for _, l in linhas_de_copy(texto)], ["copy", ""])
 
 
 class TestBriefingPermitePreco(unittest.TestCase):
