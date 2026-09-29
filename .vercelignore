@@ -5,3 +5,4 @@ scripts/tests/
 *.md
 !base-conhecimento/**/*.md
 !clientes/**/*.md
+meta-mcp/
