@@ -1,21 +1,26 @@
-/* Painel do agente de copy — paleta da identidade Italínea.
-   Azul #164194 institucional, pêssego #FBCEB7 de apoio, neutros com viés azul. */
+/* Painel do agente de copy — paleta da identidade da Turbo7.
+   Roxo #6D28D9 do fundo do logo, magenta #A21CAF do "7", neutros com viés
+   violeta. A marca Italínea manda na copy que sai daqui; esta pele é da
+   ferramenta, não da peça. Ver base-conhecimento/regras/identidade-turbo7.md. */
 
 :root {
-  --azul: #164194;
-  --azul-vivo: #2757b8;
-  --pessego: #FBCEB7;
-  --pessego-ink: #8a4a22;
+  /* `--azul` mantém o nome antigo de propósito: é o token primário que a
+     folha inteira referencia. O valor é que virou o roxo da agência. */
+  --azul: #6D28D9;
+  --azul-vivo: #7C3AED;
+  --magenta: #A21CAF;
+  --pessego: #F7D9FB;
+  --pessego-ink: #86198F;
 
-  --ground: #F5F7FC;
+  --ground: #F8F6FD;
   --surface: #FFFFFF;
-  --surface-alt: #EDF1F9;
-  --line: #DCE3F0;
-  --line-forte: #BFCAE2;
+  --surface-alt: #F2ECFB;
+  --line: #E5DCF4;
+  --line-forte: #CBBAE8;
 
-  --ink: #101A31;
-  --ink-suave: #3D4A66;
-  --ink-fraco: #6C7893;
+  --ink: #17102A;
+  --ink-suave: #453763;
+  --ink-fraco: #75678F;
 
   --ok: #16704a;
   --ok-bg: #e4f4ec;
@@ -31,20 +36,21 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --azul: #7fa0e8;
-    --azul-vivo: #9db9f5;
-    --pessego: #F0BFA4;
-    --pessego-ink: #F0BFA4;
+    --azul: #C4A5F7;
+    --azul-vivo: #DCC4FF;
+    --magenta: #F0ABFC;
+    --pessego: #F0ABFC;
+    --pessego-ink: #F0ABFC;
 
-    --ground: #0B1020;
-    --surface: #131A2E;
-    --surface-alt: #1B2440;
-    --line: #263153;
-    --line-forte: #3A4870;
+    --ground: #110A1F;
+    --surface: #1B1230;
+    --surface-alt: #261841;
+    --line: #38265C;
+    --line-forte: #503A7C;
 
-    --ink: #E8ECF7;
-    --ink-suave: #B4BDD4;
-    --ink-fraco: #8791AC;
+    --ink: #F0E9FA;
+    --ink-suave: #C6B8DC;
+    --ink-fraco: #9A8AB4;
 
     --ok: #5cc496;
     --ok-bg: #14301f;
@@ -54,6 +60,10 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+/* `hidden` precisa ganhar de `.passo { display: flex }`: estilo de autor vence
+   a folha do navegador, então sem isto os passos ocultos aparecem todos. */
+[hidden] { display: none !important; }
+
 
 body {
   margin: 0;
@@ -71,12 +81,15 @@ p { margin: 0; }
 .oculto { display: none !important; }
 
 /* ---------- Topo ---------- */
+/* O topo é a assinatura da agência: o roxo do fundo do logo indo ao magenta
+   do "7". Tudo que vive dentro dele é branco — inclusive o selo de frescor,
+   que perde as cores de estado para não brigar com o gradiente. */
 .topo {
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  background: linear-gradient(118deg, #4C1D95 0%, #6D28D9 42%, #A21CAF 100%);
   position: sticky;
   top: 0;
   z-index: 10;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
 }
 .topo-in {
   max-width: 860px;
@@ -88,13 +101,22 @@ p { margin: 0; }
   gap: 16px;
   flex-wrap: wrap;
 }
-.marca { display: flex; flex-direction: column; }
-.marca-nome { font-family: var(--display); font-weight: 600; font-size: 1.02rem; color: var(--azul); }
-.marca-sub { font-size: 0.76rem; color: var(--ink-fraco); }
+.marca { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.marca-selo {
+  width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: grid; place-items: center;
+}
+.marca-selo svg { width: 21px; height: 21px; display: block; }
+.marca-txt { display: flex; flex-direction: column; min-width: 0; }
+.marca-nome { font-family: var(--display); font-weight: 700; font-size: 1.04rem; color: #fff; letter-spacing: 0.07em; line-height: 1.15; }
+.marca-nome b { color: #F5C2FF; font-weight: 700; }
+.marca-sub { font-size: 0.72rem; color: rgba(255, 255, 255, 0.78); letter-spacing: 0.04em; }
 
-.frescor { font-family: var(--mono); font-size: 0.74rem; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line-forte); color: var(--ink-suave); }
-.frescor.velha { color: var(--erro); border-color: var(--erro); background: var(--erro-bg); }
-.frescor.ok { color: var(--ok); border-color: var(--ok); background: var(--ok-bg); }
+.frescor { font-family: var(--mono); font-size: 0.74rem; padding: 5px 11px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.34); color: rgba(255, 255, 255, 0.9); background: rgba(255, 255, 255, 0.08); }
+.frescor.velha { color: #2A1206; border-color: #FFD79A; background: #FFD79A; }
+.frescor.ok { color: #fff; border-color: rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.2); }
 
 /* ---------- Palco ---------- */
 .palco { max-width: 860px; margin: 0 auto; padding: 8px 24px 96px; }
@@ -213,7 +235,7 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--azul-vivo);
   color: #fff;
   cursor: pointer;
 }
-:root:not([data-theme="light"]) .botao { color: #0B1020; }
+:root:not([data-theme="light"]) .botao { color: #120A20; }
 @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .botao { color: #fff; } }
 .botao:hover:not(:disabled) { background: var(--azul-vivo); }
 .botao:disabled { opacity: .55; cursor: not-allowed; }

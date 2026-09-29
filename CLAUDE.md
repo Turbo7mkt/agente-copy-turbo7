@@ -60,6 +60,14 @@ Precedência: divergiu em **forma** (como escrever preço, que CTA usar), a marc
 vence; divergiu em **fato** (prazo desta loja, nota dela), o briefing vence — a
 marca não conhece a loja.
 
+### As duas identidades não se misturam
+
+A **Italínea** veste o que chega ao consumidor: anúncio, arte, copy entregue. A
+**Turbo7** veste só as ferramentas de quem opera: painel, app, relatório do
+gestor. Roxo de agência em peça de loja é erro de marca — quem compra cozinha
+conhece a rede, não a agência. A paleta da agência está em
+[`base-conhecimento/regras/identidade-turbo7.md`](base-conhecimento/regras/identidade-turbo7.md).
+
 Mapa completo de skills, incluindo o que foi avaliado e descartado:
 [`docs/skills.md`](docs/skills.md).
 
@@ -68,7 +76,8 @@ Mapa completo de skills, incluindo o que foi avaliado e descartado:
 ```
 base-conhecimento/
   MANIFEST.yaml          mapa do que veio do Drive, o que falta, o que ignorar
-  regras/                as 7 regras, ângulos, formatos de entrega, checklist QA
+  regras/                as 7 regras, ângulos, formatos de entrega, checklist QA,
+                         identidade visual da própria agência
   metodologia/           os 7 pilares da Turbo7
   templates/             diagnóstico 360°, briefing de cliente
   exemplos/              copies aprovadas — calibragem de tom
@@ -79,7 +88,9 @@ clientes/
   <slug>/copies/         entregas, uma por data
 scripts/
   lint_copy.py           verificação determinística das regras
-  tests/                 18 testes do linter
+  tests/                 36 testes do linter + 16 da porta JS do painel
+docs/
+  painel-artifact.html   cópia versionada do painel publicado como Artifact
 ```
 
 ## Comandos
@@ -93,6 +104,9 @@ python3 scripts/lint_copy.py clientes/*/copies/*.md
 
 # testes do linter
 python3 scripts/tests/test_lint_copy.py
+
+# testes da porta JS do linter — a que roda dentro do painel publicado
+node scripts/tests/test_lint_painel.mjs
 ```
 
 ## Convenções
