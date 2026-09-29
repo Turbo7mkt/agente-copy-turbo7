@@ -1,7 +1,7 @@
 # Manifesto da base de conhecimento
 # Mantido pela skill `sync-drive`. Editar à mão só para corrigir triagem.
 
-ultima_sincronizacao: 2026-08-28
+ultima_sincronizacao: 2026-09-29
 
 arquivos:
   - titulo: "PROMPT COPYS"
@@ -53,6 +53,24 @@ arquivos:
     drive_id: 1EwAwMucHR0A4847E9wTJEOX8tFoOXrROaVxwJX8X35s
     modificado_em: 2026-08-27
     destino: clientes/preemier-decore-italinea/briefing.md
+
+  - titulo: "Diagnóstico - Pinheiros"
+    drive_id: 1j0V-b8u_z0mw_hea6i27hVLuGANOLX_nz74f3iV4xKc
+    modificado_em: 2026-08-27
+    destino: clientes/pinheiros/briefing.md
+    nota: >
+      Criado em 27/08 às 15:40, depois da varredura daquele dia — por isso ficou
+      fora até 29/09. Cliente com fábrica própria, possivelmente fora da rede
+      Italínea: confirmar antes de aplicar as regras de forma da marca.
+
+  - titulo: "COPYS PINHEIROS"
+    drive_id: 16cZS2Vjzp3bw9QL-4CCiATHZrvhiMy5uQcTpVRRmGgQ
+    modificado_em: 2026-08-28
+    destino: clientes/pinheiros/briefing.md
+    nota: >
+      Copies já no ar. Alimentaram a seção "Ângulos já no ar" do briefing, para
+      não serem repetidas. Ainda usam "alto padrão", que o diagnóstico manda
+      abandonar.
 
   - titulo: "Diagnóstico - Decoralle"
     drive_id: 1zSna5rD1y7JmA1umd9vP4qb6KvFprHx4gsFPgUT_KWU
@@ -117,3 +135,28 @@ ignorar:
   - motivo: "Documento vazio ou sem identificação"
     titulos:
       - "Documento sem título"
+
+# Material novo encontrado na varredura de 29/09 e ainda não ingerido.
+# Um mês de acúmulo: a rotina agendada nunca rodou por falta do conector do Drive.
+pendentes_29set:
+  - titulo: "Diagnóstico - Móvel Máx Italínea"
+    drive_id: 1AzkXoEQjjlhIiYpy04gCX78rFEFun-542xgD5sVjwGE
+    destino_sugerido: clientes/movel-max-italinea/briefing.md
+  - titulo: "Copys dos Criativos - Italinea Movel Max - Turbo7"
+    drive_id: 1Wux6sjcS76icbLy1jJzFiN0AZmC7LRH5LttPhO4fT5w
+    destino_sugerido: base-conhecimento/exemplos/
+  - titulo: "Copys dos Criativos - BS Design Italinea Grajau - Turbo7"
+    drive_id: 1pkJ6tU2pVsQNeT3O9XA5-yoTYg3XikcQA6UrQ9Imypk
+    destino_sugerido: base-conhecimento/exemplos/
+  - titulo: "COPYS MHAVI"
+    drive_id: 1SLo6KylolAKu2s6N3fe6Zgk47DezLwvDdn84jYIOOJc
+    destino_sugerido: clientes/mhavi/ (enriquecer briefing + ângulos já no ar)
+  - titulo: "COPYS FORMOBILI"
+    drive_id: 1BjhkzQjPx0qC-GJ5MfxczWHUoFMFu3o0NiPHYPrZFTQ
+    destino_sugerido: clientes/formobili/ (cliente sem briefing)
+  - titulo: "Roteiros Fast Design"
+    drive_id: 1g7OP-WJ6GiKZLMj6E8yIvxMAyqUYVQi-wiouJqt-zRg
+    destino_sugerido: base-conhecimento/exemplos/
+  - titulo: "Roteiros Andromeda - Diana Prime"
+    drive_id: 12AmaVXYccvnLG7fM0WhKnKJZcxb9MdOOg6N_aC3hPDA
+    destino_sugerido: base-conhecimento/exemplos/
