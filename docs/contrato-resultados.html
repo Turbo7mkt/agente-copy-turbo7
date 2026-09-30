@@ -280,11 +280,10 @@ const FUNCOES = [
   },
   {
     id: "ti", nome: "TI", pessoas: ["Lucas", "Fernando"],
-    resumo: "Dado certo no caminho inteiro: chamado no prazo, sem reincidência e implantação rápida.",
+    resumo: "Dado certo no caminho inteiro: chamado no prazo e implantação rápida.",
     ind: [
-      { id: "cham", nome: "% de chamados resolvidos no prazo", peso: 1.1, tipo: "gradual", dir: "max", meta: 95, un: "%", fonte: "CockpitHub · P1 no dia, P2 24h, P3 48h" },
-      { id: "reinc", nome: "Chamados reincidentes no mês", peso: 0.5, tipo: "gradual", dir: "min", meta: 0, un: "n", fonte: "CockpitHub · mesma causa raiz" },
-      { id: "impl", nome: "% de implantações em até 3 dias úteis", peso: 0.4, tipo: "gradual", dir: "max", meta: 100, un: "%", fonte: "Controle de clientes" },
+      { id: "cham", nome: "% de chamados resolvidos no prazo", peso: 1.5, tipo: "gradual", dir: "max", meta: 95, un: "%", fonte: "CockpitHub · P1 no dia, P2 24h, P3 48h" },
+      { id: "impl", nome: "% de implantações em até 3 dias úteis", peso: 0.5, tipo: "gradual", dir: "max", meta: 100, un: "%", fonte: "Controle de clientes" },
     ],
   },
   {
