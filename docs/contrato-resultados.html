@@ -270,10 +270,10 @@ const FUNCOES = [
   },
   {
     id: "cs", nome: "CS", pessoas: ["CS"],
-    resumo: "Segurar a carteira: cancelamento baixo, dono cumprindo o combinado e onboarding rápido.",
+    resumo: "Segurar a carteira: cancelamento baixo, todo cliente com reunião a cada 15 dias e onboarding rápido.",
     ind: [
       { id: "canc", nome: "Cancelamentos no mês", peso: 1.1, tipo: "corte", dir: "min", meta: 5, un: "%", fonte: "Cancelados ÷ ativos no início do mês" },
-      { id: "comp", nome: "% de compromissos cumpridos pelos donos", peso: 0.4, tipo: "gradual", dir: "max", meta: 70, un: "%", fonte: "Controle de clientes" },
+      { id: "reun", nome: "% da carteira com reunião nos últimos 15 dias", peso: 0.4, tipo: "gradual", dir: "max", meta: 100, un: "%", fonte: "Controle de clientes · aba ERICK, data da última reunião" },
       { id: "onb", nome: "Tempo de onboarding", peso: 0.5, tipo: "corte", dir: "min", meta: 10, un: "dias", fonte: "Contrato até a 1ª campanha no ar" },
     ],
   },
@@ -341,12 +341,14 @@ const ROTINAS = {
       ["16:40 – 17:00", "Fechamento: bandeiras, compromissos e onboarding atualizados."],
     ],
     regras: [
-      "Box: até 10 clientes críticos, ligação semanal. Pista: ligação a cada 15 dias.",
+      "2 a 3 reuniões ou alinhamentos por dia: cada cliente da carteira tem reunião a cada 15 dias.",
+      "Com 23 clientes e 10 dias úteis na quinzena, 2 por dia não fecha: são 3 em alguns dias.",
+      "Box (até 10 clientes críticos) ganha uma segunda reunião na quinzena.",
       "Mais de 10 clientes no Box é alarme da carteira: vai para a daily com gestor e TI.",
       "Aprovação parada há mais de 24h ou brutos não enviados até o dia 20: cobrar o dono no mesmo dia.",
       "Compromisso não cumprido 2 vezes seguidas: mudar a abordagem ou levar ao Meet.",
     ],
-    sexta: ["Clientes por bandeira e quantos no Box", "% de compromissos cumpridos", "Cancelamentos no mês", "Tempo de onboarding"],
+    sexta: ["Clientes por bandeira e quantos no Box", "% da carteira com reunião na quinzena", "Cancelamentos no mês", "Tempo de onboarding"],
   },
   ti: {
     agenda: [
