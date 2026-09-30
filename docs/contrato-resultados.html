@@ -1,0 +1,983 @@
+<title>Contrato de Resultados Turbo7</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+/* Painel de operação: abas por função, contrato à esquerda, placar fixo à direita.
+   Ferramenta interna, então veste a Turbo7 (roxo do foguete, magenta do "7").
+   Tokens iguais aos de docs/painel-artifact.html e base-conhecimento/regras/identidade-turbo7.md. */
+:root {
+  --azul: #6D28D9; --azul-vivo: #7C3AED; --magenta: #A21CAF;
+  --pessego: #F7D9FB; --pessego-ink: #86198F;
+  --ground: #F8F6FD; --surface: #FFFFFF; --surface-alt: #F2ECFB;
+  --line: #E5DCF4; --line-forte: #CBBAE8;
+  --ink: #17102A; --ink-suave: #453763; --ink-fraco: #75678F;
+  --ok: #16704a; --ok-bg: #e4f4ec;
+  --erro: #a52017; --erro-bg: #fbe9e7;
+  --alerta: #8a5a00; --alerta-bg: #fdf1dc;
+  --f0: #EDE6F7; --f1: #E3D5F6; --f2: #CDB4F2; --f3: #A97DEB; --f4: #7C3AED;
+  --display: "Poppins", "Trebuchet MS", sans-serif;
+  --corpo: "Nunito Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --raio: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --azul: #C4A5F7; --azul-vivo: #DCC4FF; --magenta: #F0ABFC;
+    --pessego: #3A1F45; --pessego-ink: #F0ABFC;
+    --ground: #110A1F; --surface: #1B1230; --surface-alt: #261841;
+    --line: #38265C; --line-forte: #503A7C;
+    --ink: #F0E9FA; --ink-suave: #C6B8DC; --ink-fraco: #9A8AB4;
+    --ok: #5cc496; --ok-bg: #14301f; --erro: #f08b83; --erro-bg: #35191a;
+    --alerta: #e0a34a; --alerta-bg: #2e2413;
+    --f0: #2A1D44; --f1: #37255A; --f2: #523782; --f3: #7B55B8; --f4: #B48BF2;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --azul: #C4A5F7; --azul-vivo: #DCC4FF; --magenta: #F0ABFC;
+  --pessego: #3A1F45; --pessego-ink: #F0ABFC;
+  --ground: #110A1F; --surface: #1B1230; --surface-alt: #261841;
+  --line: #38265C; --line-forte: #503A7C;
+  --ink: #F0E9FA; --ink-suave: #C6B8DC; --ink-fraco: #9A8AB4;
+  --ok: #5cc496; --ok-bg: #14301f; --erro: #f08b83; --erro-bg: #35191a;
+  --alerta: #e0a34a; --alerta-bg: #2e2413;
+  --f0: #2A1D44; --f1: #37255A; --f2: #523782; --f3: #7B55B8; --f4: #B48BF2;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--ground); color: var(--ink);
+  font-family: var(--corpo); font-size: 15px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased; margin: 0;
+}
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+p { margin: 0; }
+button, input { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--azul-vivo); outline-offset: 2px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* Topo: gradiente da assinatura, uma vez por tela */
+.topo {
+  background: linear-gradient(118deg, #4C1D95 0%, #6D28D9 42%, #A21CAF 100%);
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+}
+.topo-in { max-width: 1180px; margin: 0 auto; padding: 12px 16px 0; display: flex; flex-direction: column; gap: 10px; }
+.topo-linha { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.marca { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.marca-selo { width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.22); display: grid; place-items: center; }
+.marca-selo svg { width: 21px; height: 21px; display: block; }
+.marca-txt { display: flex; flex-direction: column; min-width: 0; }
+.marca-nome { font-family: var(--display); font-weight: 700; font-size: 1.04rem; color: #fff; letter-spacing: .07em; line-height: 1.15; }
+.marca-nome b { color: #F5C2FF; }
+.marca-sub { font-size: 0.72rem; color: rgba(255,255,255,.8); letter-spacing: .04em; }
+.pilula { font-family: var(--mono); font-size: 0.7rem; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.34); color: rgba(255,255,255,.92); background: rgba(255,255,255,.08); white-space: nowrap; }
+.abas { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; margin-inline: -4px; }
+.abas::-webkit-scrollbar { display: none; }
+.aba { background: none; border: 0; cursor: pointer; padding: 9px 12px 11px; color: rgba(255,255,255,.78); font-family: var(--display); font-weight: 500; font-size: 0.86rem; white-space: nowrap; border-bottom: 3px solid transparent; }
+.aba:hover { color: #fff; }
+.aba[aria-selected="true"] { color: #fff; border-bottom-color: #F5C2FF; font-weight: 600; }
+
+.palco { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 22px 80px; display: flex; flex-direction: column; gap: 18px; }
+
+.aviso { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--pessego); color: var(--pessego-ink); border-radius: var(--raio); padding: 10px 14px; font-size: 0.86rem; }
+.aviso strong { font-weight: 700; }
+
+.cab-funcao { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.cab-funcao h1 { font-size: 1.45rem; font-weight: 600; }
+.cab-funcao .sub { color: var(--ink-fraco); font-size: 0.88rem; max-width: 62ch; }
+.pessoas { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.chip { border: 1px solid var(--line-forte); background: var(--surface); border-radius: 999px; padding: 5px 13px; cursor: pointer; font-size: 0.84rem; font-weight: 600; }
+.chip[aria-pressed="true"] { background: var(--azul); border-color: var(--azul); color: var(--surface); }
+.chip.add { border-style: dashed; color: var(--ink-fraco); font-weight: 400; }
+
+.seg { display: inline-flex; border: 1px solid var(--line-forte); border-radius: 9px; padding: 2px; background: var(--surface); }
+.seg button { border: 0; background: none; padding: 6px 14px; border-radius: 7px; cursor: pointer; font-size: 0.84rem; font-weight: 600; color: var(--ink-suave); }
+.seg button[aria-pressed="true"] { background: var(--surface-alt); color: var(--azul); box-shadow: inset 0 0 0 1px var(--line-forte); }
+
+.grade { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .grade { grid-template-columns: minmax(0, 1fr); } .placar { position: static !important; order: -1; } }
+.coluna { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+.bloco { background: var(--surface); border: 1px solid var(--line); border-radius: var(--raio); overflow: hidden; }
+.bloco-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+.bloco-cab h2 { font-size: 1rem; font-weight: 600; }
+.bloco-cab .peso-total { font-family: var(--mono); font-size: 0.76rem; color: var(--ink-fraco); }
+.rolagem { overflow-x: auto; }
+
+table.ct { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-width: 760px; }
+table.ct th { text-align: left; font-weight: 600; font-size: 0.7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-fraco); padding: 8px 10px; background: var(--surface-alt); white-space: nowrap; }
+table.ct td { padding: 9px 10px; border-top: 1px solid var(--line); vertical-align: middle; }
+table.ct th.d, table.ct td.d { text-align: right; }
+.ind-nome { font-weight: 600; line-height: 1.3; }
+.ind-fonte { font-size: 0.74rem; color: var(--ink-fraco); }
+.tag { display: inline-block; font-family: var(--mono); font-size: 0.66rem; padding: 1px 6px; border-radius: 5px; background: var(--surface-alt); color: var(--ink-suave); border: 1px solid var(--line); margin-left: 4px; vertical-align: 1px; }
+.tag.corte { background: var(--alerta-bg); color: var(--alerta); border-color: transparent; }
+tr.entrada td { background: var(--surface-alt); }
+tr.entrada .ind-nome { font-weight: 400; color: var(--ink-suave); }
+
+input.cel { width: 88px; padding: 5px 7px; border: 1px solid var(--line-forte); border-radius: 7px; background: var(--surface); text-align: right; font-family: var(--mono); font-size: 0.82rem; }
+input.cel:focus { border-color: var(--azul); }
+input.cel.fora { border-color: var(--erro); background: var(--erro-bg); }
+input.cel.dentro { border-color: var(--ok); }
+input.nome-in { border: 1px solid var(--line-forte); border-radius: 7px; padding: 5px 9px; background: var(--surface); font-weight: 600; width: 200px; max-width: 100%; }
+
+.prog { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.barra { width: 64px; height: 6px; background: var(--f0); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+.barra i { display: block; height: 100%; background: var(--azul); border-radius: 3px; }
+.barra i.cheio { background: var(--ok); }
+.pts { font-family: var(--mono); font-weight: 600; }
+.vazio { color: var(--ink-fraco); }
+
+/* Simulação */
+.sim-cel { display: flex; align-items: center; gap: 10px; min-width: 250px; }
+.sim-cel input[type="range"] { flex: 1; accent-color: var(--azul); min-width: 120px; }
+.sim-cel output { font-family: var(--mono); font-size: 0.82rem; min-width: 76px; text-align: right; }
+.acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--line-forte); background: var(--surface); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--ink-suave); }
+.btn:hover { border-color: var(--azul); color: var(--azul); }
+.btn.forte { background: var(--azul); border-color: var(--azul); color: var(--surface); }
+
+/* Placar */
+.placar { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 112px); display: flex; flex-direction: column; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--raio); padding: 18px; }
+.placar.sim { border-color: var(--azul); box-shadow: inset 0 0 0 1px var(--azul); }
+.rotulo { font-size: 0.7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-fraco); font-weight: 600; }
+.nota-grande { display: flex; align-items: baseline; gap: 8px; }
+.nota-grande .n { font-family: var(--display); font-weight: 700; font-size: 3rem; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.nota-grande .de { color: var(--ink-fraco); font-family: var(--mono); font-size: 0.9rem; }
+.bonus { font-family: var(--display); font-weight: 600; font-size: 1.35rem; color: var(--azul); }
+.regua { position: relative; padding-top: 16px; }
+.faixas { display: flex; height: 10px; border-radius: 5px; overflow: hidden; }
+.faixas span { display: block; height: 100%; }
+.marcador { position: absolute; top: 0; width: 2px; height: 30px; background: var(--ink); transform: translateX(-1px); transition: left .25s ease; }
+.marcador::before { content: ""; position: absolute; top: -2px; left: -4px; border: 5px solid transparent; border-top-color: var(--ink); }
+.regua-rot { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.66rem; color: var(--ink-fraco); margin-top: 5px; }
+.meses { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.mes { background: var(--surface-alt); border-radius: 8px; padding: 7px 9px; display: flex; flex-direction: column; }
+.mes .m { font-size: 0.7rem; color: var(--ink-fraco); text-transform: uppercase; letter-spacing: .06em; }
+.mes .v { font-family: var(--mono); font-weight: 600; font-size: 0.95rem; }
+.dica { font-size: 0.84rem; color: var(--ink-suave); border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.dica b { color: var(--ink); }
+.estado { display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.estado.ok { background: var(--ok-bg); color: var(--ok); }
+.estado.alerta { background: var(--alerta-bg); color: var(--alerta); }
+.estado.erro { background: var(--erro-bg); color: var(--erro); }
+
+/* Rotina */
+.rotina { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 900px) { .rotina { grid-template-columns: minmax(0, 1fr); } }
+.agenda { list-style: none; margin: 0; padding: 0; }
+.agenda li { display: grid; grid-template-columns: 26px 104px minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px 16px; border-top: 1px solid var(--line); }
+.agenda li:first-child { border-top: 0; }
+.agenda li.agora { background: var(--surface-alt); }
+.agenda li.feito .txt { color: var(--ink-fraco); text-decoration: line-through; }
+.agenda input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--azul); margin-top: 2px; }
+.agenda .hora { font-family: var(--mono); font-size: 0.8rem; color: var(--azul); padding-top: 1px; }
+.lista { margin: 0; padding: 12px 16px 14px 34px; display: flex; flex-direction: column; gap: 6px; font-size: 0.88rem; color: var(--ink-suave); }
+.progresso-dia { display: flex; align-items: center; gap: 10px; font-size: 0.82rem; color: var(--ink-fraco); }
+.progresso-dia .barra { width: 120px; }
+
+/* Equipe e regras */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--raio); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+.kpi .v { font-family: var(--display); font-weight: 600; font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.kpi .s { font-size: 0.8rem; color: var(--ink-fraco); }
+.fat { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; }
+.fat-linha { display: grid; grid-template-columns: 44px minmax(0, 1fr) 150px; gap: 10px; align-items: center; font-size: 0.84rem; }
+.fat-trilho { position: relative; height: 14px; background: var(--f0); border-radius: 4px; }
+.fat-trilho i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--azul); border-radius: 4px; }
+.fat-trilho b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+.texto { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: var(--ink-suave); max-width: 80ch; }
+.texto code { font-family: var(--mono); font-size: 0.82rem; background: var(--surface-alt); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--azul); cursor: pointer; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .marcador { transition: none; } }
+</style>
+
+<header class="topo">
+  <div class="topo-in">
+    <div class="topo-linha">
+      <div class="marca">
+        <span class="marca-selo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 1.6c2.6 2.4 4.2 5.8 4.2 9.5v5.6H7.8v-5.6c0-3.7 1.6-7.1 4.2-9.5Z" fill="#fff"/>
+            <path d="M7.8 11.9 5.3 14.7c-.2.3-.3.6-.3 1v3.4l2.8-1.9v-5.3Zm8.4 0v5.3l2.8 1.9v-3.4c0-.4-.1-.7-.3-1l-2.5-2.8Z" fill="#fff"/>
+            <circle cx="12" cy="8.8" r="1.75" fill="#A21CAF"/>
+            <path d="M12 17c.9 1.1 1.5 2.5 1.7 4.1-.5-.4-1.1-.6-1.7-.6s-1.2.2-1.7.6c.2-1.6.8-3 1.7-4.1Z" fill="#F5C2FF"/>
+          </svg>
+        </span>
+        <span class="marca-txt">
+          <span class="marca-nome">TURBO<b>7</b></span>
+          <span class="marca-sub">Contrato de resultados · Q4 2026</span>
+        </span>
+      </div>
+      <span class="pilula">Outubro a dezembro · pago no trimestre</span>
+    </div>
+    <nav class="abas" id="abas" role="tablist" aria-label="Funções"></nav>
+  </div>
+</header>
+
+<main class="palco" id="palco"></main>
+
+<script>
+/* ============================================================
+   Definição do contrato — tudo que foi fechado na sessão.
+   Mudou meta, peso ou faixa? Mude aqui; o resto é cálculo.
+   ============================================================ */
+const MESES = [
+  { id: "out", nome: "Outubro", curto: "Out" },
+  { id: "nov", nome: "Novembro", curto: "Nov" },
+  { id: "dez", nome: "Dezembro", curto: "Dez" },
+];
+const FAT_META = { out: 130000, nov: 150000, dez: 200000 };
+const BONUS = [
+  { de: 0, ate: 6, valor: 0 },
+  { de: 6, ate: 7, valor: 1000 },
+  { de: 7, ate: 8, valor: 1500 },
+  { de: 8, ate: 9, valor: 2000 },
+  { de: 9, ate: 10.0001, valor: 3000 },
+];
+
+// tipo: "gradual" = (realizado − base) ÷ (meta − base), travado entre 0 e 100%
+//       "corte"   = dentro do limite vale o peso inteiro; fora, zero
+// dir:  "max" maior é melhor · "min" menor é melhor
+const EMPRESA = [
+  { id: "fat", nome: "Faturamento da Turbo7", peso: 1.5, tipo: "fat", dir: "max", un: "R$", fonte: "Financeiro · base de outubro = setembro" },
+  { id: "canc", nome: "Cancelamento da carteira no mês", peso: 1, tipo: "corte", dir: "min", meta: 5, un: "%", fonte: "Controle de clientes" },
+  { id: "sat", nome: "Satisfação média dos clientes", peso: 0.5, tipo: "gradual", dir: "max", un: "%", metaDaBase: 1.1, fonte: "Controle de Satisfação · meta = base + 10%" },
+];
+
+const FUNCOES = [
+  {
+    id: "gestor", nome: "Gestor de tráfego", pessoas: ["Davi", "Micheli", "Tiago Vianna"],
+    resumo: "Volume de leads pelo investimento planejado, eficiência pelo investimento gasto e as copys da trilha de teste.",
+    entradas: [
+      { id: "copys", nome: "Copys entregues por dia útil", un: "n" },
+      { id: "plan", nome: "Investimento planejado da carteira", un: "R$" },
+      { id: "gasto", nome: "Investimento gasto da carteira", un: "R$" },
+      { id: "leads", nome: "Leads gerados na carteira", un: "n" },
+    ],
+    ind: [
+      { id: "copys", nome: "Copys entregues por dia útil", peso: 2, tipo: "gradual", dir: "max", meta: 3, un: "n", fonte: "Planilha Criativos Turbo7" },
+      { id: "leadsPct", nome: "% da meta de leads", peso: 2.5, tipo: "gradual", dir: "max", meta: 100, un: "%", fonte: "Leads ÷ (investimento planejado ÷ 40)", derivado: v => v.plan > 0 && v.leads != null ? v.leads / (v.plan / 40) * 100 : null },
+      { id: "cpl", nome: "CPL geral", peso: 2.5, tipo: "corte", dir: "min", meta: 40, un: "R$", fonte: "Investimento gasto ÷ leads", derivado: v => v.leads > 0 && v.gasto != null ? v.gasto / v.leads : null },
+    ],
+  },
+  {
+    id: "cs", nome: "CS", pessoas: ["CS"],
+    resumo: "Segurar a carteira: cancelamento baixo, cliente verde, dono cumprindo o combinado e onboarding rápido.",
+    ind: [
+      { id: "canc", nome: "Cancelamentos no mês", peso: 3, tipo: "corte", dir: "min", meta: 5, un: "%", fonte: "Cancelados ÷ ativos no início do mês" },
+      { id: "verde", nome: "% da carteira em bandeira verde", peso: 1.5, tipo: "gradual", dir: "max", meta: 70, un: "%", fonte: "Controle de clientes" },
+      { id: "comp", nome: "% de compromissos cumpridos pelos donos", peso: 1, tipo: "gradual", dir: "max", meta: 70, un: "%", fonte: "Controle de clientes" },
+      { id: "onb", nome: "Tempo de onboarding", peso: 1.5, tipo: "corte", dir: "min", meta: 10, un: "dias", fonte: "Contrato até a 1ª campanha no ar" },
+    ],
+  },
+  {
+    id: "ti", nome: "TI", pessoas: ["TI"],
+    resumo: "Dado certo no caminho inteiro: chamado no prazo, sem reincidência, auditoria liberada antes da OP.",
+    ind: [
+      { id: "cham", nome: "% de chamados resolvidos no prazo", peso: 3, tipo: "gradual", dir: "max", meta: 95, un: "%", fonte: "CockpitHub · P1 no dia, P2 24h, P3 48h" },
+      { id: "reinc", nome: "Chamados reincidentes no mês", peso: 1.5, tipo: "gradual", dir: "min", meta: 0, un: "n", fonte: "CockpitHub · mesma causa raiz" },
+      { id: "aud", nome: "% de Auditorias D-1 liberadas até 12:10", peso: 1.5, tipo: "gradual", dir: "max", meta: 100, un: "%", fonte: "Grupo INTEGRAÇÃO" },
+      { id: "impl", nome: "% de implantações em até 3 dias úteis", peso: 1, tipo: "gradual", dir: "max", meta: 100, un: "%", fonte: "Controle de clientes" },
+    ],
+  },
+  {
+    id: "social", nome: "Social Media", pessoas: ["Social Media"],
+    resumo: "Narração no prazo para o design editar, orgânico aprovado de uma vez e captação feita.",
+    ind: [
+      { id: "narr", nome: "% de narrações gravadas até D+1", peso: 3, tipo: "gradual", dir: "max", meta: 95, un: "%", fonte: "Planilha de Criativos" },
+      { id: "cal", nome: "% de calendários aprovados até o dia 25", peso: 1.5, tipo: "gradual", dir: "max", meta: 100, un: "%", fonte: "Calendários do orgânico" },
+      { id: "posts", nome: "% de posts publicados no prazo", peso: 1.5, tipo: "gradual", dir: "max", meta: 95, un: "%", fonte: "Calendários do orgânico" },
+      { id: "capt", nome: "% de captações realizadas", peso: 1, tipo: "gradual", dir: "max", meta: 100, un: "%", fonte: "Controle de clientes" },
+    ],
+  },
+  {
+    id: "design", nome: "Design", pessoas: ["Designer 1", "Designer 2"],
+    resumo: "Volume de criativos por dia e criativo que o dono aprova de primeira.",
+    ind: [
+      { id: "qtd", nome: "Criativos entregues por dia útil", peso: 4, tipo: "gradual", dir: "max", meta: 6, un: "n", fonte: "Planilha de Criativos · status Pronto" },
+      { id: "aprov", nome: "% aprovados na 1ª versão", peso: 3, tipo: "gradual", dir: "max", meta: 80, un: "%", fonte: "Planilha de Criativos" },
+    ],
+  },
+];
+
+/* Rotinas — resumo dos documentos "Rotina Diária do … Turbo7". */
+const ROTINAS = {
+  gestor: {
+    pendente: "A rotina do gestor ainda não foi enviada. Abaixo está o que as outras quatro rotinas pedem do gestor.",
+    agenda: [
+      ["08:00 – 09:30", "OPs do dia com dado liberado pelo TI no grupo INTEGRAÇÃO (até 4 por dia, 3 na sexta)."],
+      ["09:30 – 09:50", "Daily: contas paradas ou anúncios reprovados, crédito pendente, OP sem dado liberado, criativo aprovado não subido."],
+      ["Durante a OP", "1 vídeo + 1 imagem do banco (trilha rápida) e 1 copy nova para a trilha de teste."],
+      ["Ao longo do dia", "3 copys entregues e gravadas na Planilha Criativos Turbo7."],
+      ["D+3", "MO dos clientes da OP de 3 dias atrás, com nota 0–5 no Relatório diário."],
+      ["WhatsApp", "Criativo pronto enviado ao dono para aprovação; campanha, verba, crédito e CPL respondidos no grupo."],
+      ["Fechamento", "Flags ao CS no Relatório diário; cliente em risco marcado no Discord na hora."],
+    ],
+    regras: [
+      "Meta de leads do cliente = investimento planejado ÷ 40.",
+      "Crédito não pago 1 dia após o aviso vira flag financeira ao CS.",
+      "Banco de roteiros e copys do mês seguinte vai ao dono 2 dias antes do Meet.",
+      "Antes da OP, ler o repasse do dono na Planilha de controle de clientes.",
+    ],
+    sexta: ["Copys por dia", "% da meta de leads da carteira", "CPL geral contra R$ 40"],
+  },
+  cs: {
+    agenda: [
+      ["08:00 – 08:30", "Grid de largada: leitura da carteira e pauta da daily."],
+      ["08:30 – 09:30", "WhatsApp, 1º momento: responder o que é do CS e marcar gestor ou TI no que é deles."],
+      ["09:30 – 09:50", "Conduzir a daily na ordem TI → gestores → social media → design → CS."],
+      ["09:50 – 10:30", "Impedimentos: resolver ou encaminhar só com os envolvidos."],
+      ["10:30 – 12:00", "Placar e preparação das ligações; enviar o placar quando o TI liberar o dado."],
+      ["13:00 – 16:00", "Ligações com os donos (ou Meets mensais nos 10 primeiros dias úteis)."],
+      ["16:00 – 16:40", "WhatsApp, 2º momento, e repasse do dono na Planilha de controle de clientes."],
+      ["16:40 – 17:00", "Fechamento: bandeiras, compromissos e onboarding atualizados."],
+    ],
+    regras: [
+      "Box: até 10 clientes críticos, ligação semanal. Pista: ligação a cada 15 dias.",
+      "Mais de 10 clientes no Box é alarme da carteira: vai para a daily com gestor e TI.",
+      "Aprovação parada há mais de 24h ou brutos não enviados até o dia 20: cobrar o dono no mesmo dia.",
+      "Compromisso não cumprido 2 vezes seguidas: mudar a abordagem ou levar ao Meet.",
+    ],
+    sexta: ["Clientes por bandeira e quantos no Box", "% de compromissos cumpridos", "Cancelamentos no mês", "Tempo de onboarding"],
+  },
+  ti: {
+    agenda: [
+      ["08:00 – 09:00", "Chamados, 1º momento: classificar e resolver, começando pela P1."],
+      ["09:00 – 09:30", "Telemetria matinal de todos os clientes: Stract, Planilha base, dashboards e GHL."],
+      ["09:30 – 09:50", "Daily: P1 abertas, o que a telemetria achou, implantação em andamento."],
+      ["09:50 – 11:50", "Auditoria D-1 de até 4 clientes; liberar cada um no grupo INTEGRAÇÃO."],
+      ["13:00 – 14:30", "Slot do dia: seg recuperação · ter/qua/qui implantação · sex fechamento."],
+      ["14:30 – 15:30", "Chamados, 2º momento."],
+      ["15:30 – 16:30", "Reserva: chamado com mais de 1h ou P1 nova."],
+      ["16:30 – 17:00", "Fechamento: todo chamado do dia com status atualizado no CockpitHub."],
+    ],
+    regras: [
+      "P1 no mesmo dia · P2 até 24h · P3 até 48h.",
+      "Fora dos 2 momentos, só P1 interrompe a agenda.",
+      "Pedido por WhatsApp ou de boca só é atendido depois de virar chamado.",
+      "Todo chamado corrigido vira prevenção na telemetria ou na auditoria.",
+    ],
+    sexta: ["% de chamados no prazo", "Chamados reincidentes", "Auditorias com divergência (diagnóstico, fora do contrato)"],
+  },
+  social: {
+    agenda: [
+      ["08:00 – 08:30", "Fila do dia: roteiros das OPs de ontem, captações agendadas e posts do dia."],
+      ["08:30 – 09:30", "Gravação em lote das narrações pedidas ontem."],
+      ["09:30 – 09:50", "Daily: narrações na fila, brutos que faltam, captações da semana."],
+      ["09:50 – 12:00", "Orgânico: legendas, calendário e agendamento."],
+      ["13:00 – 16:00", "Captação externa (até 2 tardes por semana) ou produção do orgânico."],
+      ["16:00 – 16:40", "Grupos dos clientes do orgânico."],
+      ["16:40 – 17:00", "Fechamento: status de narrações e captações na Planilha de Criativos."],
+    ],
+    regras: [
+      "Roteiro sem aprovação do dono não é gravado.",
+      "Narração gravada até D+1 para o designer editar no mesmo dia.",
+      "Calendário do mês seguinte montado até o dia 20 e aprovado até o dia 25.",
+      "Narração urgente fora do bloco só para cliente do Box com 2 ou menos criativos verdes.",
+    ],
+    sexta: ["Narrações gravadas até D+1", "Calendários aprovados até o dia 25", "Posts no prazo", "Captações no mês"],
+  },
+  design: {
+    agenda: [
+      ["08:00 – 08:30", "Fila do dia: narrações gravadas, brutos disponíveis e ajustes pedidos."],
+      ["08:30 – 09:30", "Ajustes pedidos, começando pelos criativos mais perto de subir."],
+      ["09:30 – 09:50", "Daily: criativos além de D+2 e pedidos sem roteiro, narração ou bruto."],
+      ["09:50 – 12:00", "3 vídeos."],
+      ["13:00 – 15:00", "3 vídeos."],
+      ["15:00 – 16:00", "4 imagens (anúncio e orgânico)."],
+      ["16:00 – 16:40", "Entrega: status Pronto na Planilha de Criativos e aviso ao gestor ou ao social media."],
+      ["16:40 – 17:00", "Fechamento: fila de amanhã conferida."],
+    ],
+    regras: [
+      "Prioridade da fila: ajustes quase no ar → Box → Pista → orgânico.",
+      "Pedido sem roteiro aprovado, narração ou bruto não entra: vai para a daily.",
+      "Mais de 2 rodadas de ajuste no mesmo criativo: rever a linha criativa no Meet.",
+      "Ajuste tem prazo de 1 dia útil.",
+    ],
+    sexta: ["Criativos entregues por dia", "% aprovados na 1ª versão"],
+  },
+};
+
+/* ============================================================
+   Estado — salvo só neste navegador até as planilhas entrarem.
+   ============================================================ */
+const CHAVE = "contrato-t7-q4-2026";
+function exemplo() {
+  const s = { exemplo: true, aba: "equipe", modo: {}, sub: {}, pessoaSel: {}, pessoas: {}, dados: {}, sim: {}, checks: {},
+    empresa: { baseSet: 112000, satBase: 68, meses: { out: { fat: 128500, canc: 3.8, sat: 71 }, nov: { fat: 141000, canc: 6.1, sat: 73 }, dez: {} } } };
+  const ritmo = [[0.9, 0.95], [0.6, 0.8], [0.75, 0.55], [1, 0.85]];
+  let k = 0;
+  FUNCOES.forEach(f => {
+    s.pessoas[f.id] = f.pessoas.map(nome => {
+      const id = f.id + "-" + (k++);
+      const r = ritmo[k % ritmo.length];
+      const bases = {}, meses = { out: {}, nov: {}, dez: {} };
+      f.ind.forEach(ind => {
+        if (ind.tipo === "gradual" && !ind.derivado) bases[ind.id] = baseSugerida(ind);
+      });
+      if (f.id === "gestor") {
+        bases.leadsPct = 70;
+        MESES.slice(0, 2).forEach((m, i) => {
+          const plan = 36000 + k * 4000;
+          meses[m.id] = { copys: +(2 + r[i]).toFixed(1), plan, gasto: Math.round(plan * (0.9 + r[i] * 0.08)), leads: Math.round(plan / 40 * (0.72 + r[i] * 0.3)) };
+        });
+      } else {
+        MESES.slice(0, 2).forEach((m, i) => {
+          f.ind.forEach(ind => {
+            if (ind.tipo === "corte") meses[m.id][ind.id] = ind.dir === "min" ? +(ind.meta * (r[i] > 0.7 ? 0.8 : 1.3)).toFixed(1) : ind.meta;
+            else { const b = bases[ind.id]; meses[m.id][ind.id] = +(b + (ind.meta - b) * r[i]).toFixed(1); }
+          });
+        });
+      }
+      s.dados[id] = { nome, bases, meses };
+      return id;
+    });
+  });
+  return s;
+}
+function baseSugerida(ind) {
+  if (ind.dir === "min") return ind.un === "n" ? 4 : ind.meta * 2;
+  if (ind.un === "%") return Math.round(ind.meta * 0.65);
+  return +(ind.meta * 0.65).toFixed(1);
+}
+function vazio() {
+  const s = exemplo();
+  s.exemplo = false;
+  s.empresa = { baseSet: null, satBase: null, meses: { out: {}, nov: {}, dez: {} } };
+  Object.values(s.dados).forEach(d => { d.meses = { out: {}, nov: {}, dez: {} }; d.bases = {}; });
+  return s;
+}
+let S;
+try { S = JSON.parse(localStorage.getItem(CHAVE)) || exemplo(); } catch (e) { S = exemplo(); }
+function salvar() { try { localStorage.setItem(CHAVE, JSON.stringify(S)); } catch (e) {} }
+
+/* ============================================================
+   Cálculo
+   ============================================================ */
+const trava = x => Math.max(0, Math.min(1, x));
+const temValor = v => v !== null && v !== undefined && v !== "" && !Number.isNaN(v);
+
+function progresso(ind, v, base, metaMes) {
+  if (!temValor(v)) return null;
+  const meta = metaMes ?? ind.meta;
+  if (ind.tipo === "corte") return (ind.dir === "min" ? v <= meta : v >= meta) ? 1 : 0;
+  if (!temValor(base) || !temValor(meta)) return null;
+  if (meta === base) return (ind.dir === "min" ? v <= meta : v >= meta) ? 1 : 0;
+  return trava((v - base) / (meta - base));
+}
+function metaSat() { return temValor(S.empresa.satBase) ? Math.min(100, +(S.empresa.satBase * 1.1).toFixed(1)) : null; }
+function fatBase(mes) { return mes === "out" ? S.empresa.baseSet : mes === "nov" ? FAT_META.out : FAT_META.nov; }
+
+// valores do mês: fonte = lançado ou simulação
+function valorEmpresa(ind, mes, sim) {
+  if (sim) return ind.id === "fat" ? sim.fat[mes] : sim[ind.id];
+  return S.empresa.meses[mes]?.[ind.id];
+}
+function progEmpresa(ind, mes, sim) {
+  const v = valorEmpresa(ind, mes, sim);
+  if (ind.id === "fat") return progresso(ind, v, fatBase(mes), FAT_META[mes]);
+  if (ind.id === "sat") return progresso(ind, v, S.empresa.satBase, metaSat());
+  return progresso(ind, v, null);
+}
+function valorPessoa(f, pid, ind, mes, sim) {
+  if (sim) return sim[ind.id];
+  const m = S.dados[pid].meses[mes] || {};
+  return ind.derivado ? ind.derivado(m) : m[ind.id];
+}
+function progPessoa(f, pid, ind, mes, sim) {
+  return progresso(ind, valorPessoa(f, pid, ind, mes, sim), S.dados[pid].bases[ind.id]);
+}
+function mesLancado(f, pid, mes) {
+  const m = S.dados[pid].meses[mes] || {};
+  return Object.values(m).some(temValor);
+}
+// nota do mês = Σ peso × progresso; linha sem valor conta zero
+function notaMes(f, pid, mes, sim) {
+  let n = 0;
+  EMPRESA.forEach(ind => { n += ind.peso * (progEmpresa(ind, mes, sim?.empresa) ?? 0); });
+  f.ind.forEach(ind => { n += ind.peso * (progPessoa(f, pid, ind, mes, sim?.pessoa) ?? 0); });
+  return n;
+}
+function resultado(f, pid, sim) {
+  const meses = MESES.map(m => ({ id: m.id, nota: (sim || mesLancado(f, pid, m.id)) ? notaMes(f, pid, m.id, sim) : null }));
+  const validos = meses.filter(m => m.nota !== null);
+  const nota = validos.length ? validos.reduce((a, m) => a + m.nota, 0) / validos.length : null;
+  return { meses, nota, lancados: validos.length };
+}
+function faixa(nota) { return BONUS.find(b => nota >= b.de && nota < b.ate) || BONUS[0]; }
+function proxima(nota) { return BONUS.find(b => b.de > nota); }
+// maior alavanca: linha com mais pontos na mesa (peso × o que falta)
+function alavanca(f, pid, sim) {
+  const linhas = [];
+  const media = fn => { const ps = MESES.map(m => fn(m.id)).filter(p => p !== null); return ps.length ? ps.reduce((a, b) => a + b, 0) / ps.length : 0; };
+  f.ind.forEach(ind => { const p = media(mes => progPessoa(f, pid, ind, mes, sim?.pessoa)); linhas.push({ nome: ind.nome, p, falta: ind.peso * (1 - p) }); });
+  EMPRESA.forEach(ind => { const p = media(mes => progEmpresa(ind, mes, sim?.empresa)); linhas.push({ nome: ind.nome + " (empresa)", p, falta: ind.peso * (1 - p) }); });
+  return linhas.sort((a, b) => b.falta - a.falta)[0];
+}
+
+/* ============================================================
+   Formatação
+   ============================================================ */
+const nf1 = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const nf2 = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const brl2 = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function fmt(v, un) {
+  if (!temValor(v)) return "—";
+  if (un === "R$") return v >= 1000 ? brl.format(v) : brl2.format(v);
+  if (un === "%") return nf1.format(v) + "%";
+  if (un === "dias") return nf1.format(v) + " d.u.";
+  return nf1.format(v);
+}
+function fmtMeta(ind) {
+  const sinal = ind.tipo === "corte" ? (ind.dir === "min" ? "até " : "≥ ") : "";
+  return sinal + fmt(ind.meta, ind.un);
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const lerNum = el => el.value === "" ? null : Number(String(el.value).replace(",", "."));
+
+/* ============================================================
+   Abas
+   ============================================================ */
+const ABAS = [{ id: "equipe", nome: "Equipe" }, ...FUNCOES.map(f => ({ id: f.id, nome: f.nome })), { id: "regras", nome: "Regras" }];
+function desenharAbas() {
+  document.getElementById("abas").innerHTML = ABAS.map(a =>
+    `<button class="aba" role="tab" id="aba-${a.id}" aria-selected="${S.aba === a.id}" data-aba="${a.id}">${esc(a.nome)}</button>`).join("");
+}
+document.getElementById("abas").addEventListener("click", e => {
+  const b = e.target.closest("[data-aba]"); if (!b) return;
+  S.aba = b.dataset.aba; salvar(); desenhar();
+});
+
+function avisoExemplo() {
+  if (!S.exemplo) return "";
+  return `<div class="aviso"><span><strong>Dados de exemplo.</strong> Outubro e novembro estão preenchidos com números fictícios para mostrar o cálculo. Nada aqui é resultado real.</span>
+    <button class="btn" data-acao="limpar">Começar em branco</button></div>`;
+}
+
+function desenhar() {
+  desenharAbas();
+  const palco = document.getElementById("palco");
+  if (S.aba === "equipe") palco.innerHTML = avisoExemplo() + telaEquipe();
+  else if (S.aba === "regras") palco.innerHTML = telaRegras();
+  else palco.innerHTML = avisoExemplo() + telaFuncao(FUNCOES.find(f => f.id === S.aba));
+  if (FUNCOES.some(f => f.id === S.aba)) atualizarPlacar();
+}
+
+/* ---------- Equipe ---------- */
+function telaEquipe() {
+  let total = 0, linhas = "";
+  FUNCOES.forEach(f => S.pessoas[f.id].forEach(pid => {
+    const r = resultado(f, pid);
+    const b = r.nota !== null ? faixa(r.nota).valor : 0;
+    total += b;
+    linhas += `<tr>
+      <td><button class="linkbtn" data-ir="${f.id}" data-pid="${pid}">${esc(S.dados[pid].nome)}</button></td>
+      <td>${esc(f.nome)}</td>
+      ${r.meses.map(m => `<td class="d num">${m.nota === null ? '<span class="vazio">—</span>' : nf1.format(m.nota)}</td>`).join("")}
+      <td class="d"><span class="pts">${r.nota === null ? "—" : nf2.format(r.nota)}</span></td>
+      <td class="d num">${r.nota === null ? "—" : brl.format(b)}</td>
+    </tr>`;
+  }));
+  const pessoas = FUNCOES.reduce((a, f) => a + S.pessoas[f.id].length, 0);
+  const fatUlt = MESES.map(m => S.empresa.meses[m.id]?.fat).filter(temValor).pop();
+  return `
+    <div class="cab-funcao"><div><h1>Equipe no trimestre</h1>
+      <p class="sub">Nota de cada pessoa até agora, na média dos meses lançados. Clique no nome para abrir o contrato.</p></div></div>
+    <div class="kpis">
+      <div class="kpi"><span class="rotulo">Bônus projetado</span><span class="v">${brl.format(total)}</span><span class="s">se o trimestre fechar com as notas de hoje</span></div>
+      <div class="kpi"><span class="rotulo">Teto do trimestre</span><span class="v">${brl.format(pessoas * 3000)}</span><span class="s">${pessoas} pessoas com nota 9 ou mais</span></div>
+      <div class="kpi"><span class="rotulo">Último faturamento</span><span class="v">${fatUlt ? brl.format(fatUlt) : "—"}</span><span class="s">meta de dezembro: ${brl.format(FAT_META.dez)}</span></div>
+    </div>
+    <section class="bloco"><div class="bloco-cab"><h2>Faturamento contra a escada</h2><span class="peso-total">base de outubro = setembro</span></div>${graficoFat()}</section>
+    <section class="bloco"><div class="bloco-cab"><h2>Notas por pessoa</h2><span class="peso-total">nota do trimestre = média dos meses</span></div>
+      <div class="rolagem"><table class="ct" style="min-width:640px"><thead><tr><th>Pessoa</th><th>Função</th><th class="d">Out</th><th class="d">Nov</th><th class="d">Dez</th><th class="d">Nota</th><th class="d">Bônus</th></tr></thead>
+      <tbody>${linhas}</tbody></table></div></section>`;
+}
+function graficoFat() {
+  const teto = 220000;
+  const linhas = MESES.map(m => {
+    const v = S.empresa.meses[m.id]?.fat;
+    const p = progEmpresa(EMPRESA[0], m.id);
+    const est = p === null ? "" : p >= 1 ? '<span class="estado ok">bateu</span>' : `<span class="estado alerta">${Math.round(p * 100)}%</span>`;
+    return `<div class="fat-linha"><span class="num">${m.curto}</span>
+      <div class="fat-trilho" title="Meta ${brl.format(FAT_META[m.id])}">${temValor(v) ? `<i style="width:${Math.min(100, v / teto * 100)}%"></i>` : ""}<b style="left:${FAT_META[m.id] / teto * 100}%"></b></div>
+      <span class="num" style="font-size:.8rem">${temValor(v) ? brl.format(v) : "—"} / ${brl.format(FAT_META[m.id] / 1000).replace(/\s?$/, "")} mil ${est}</span></div>`;
+  }).join("");
+  return `<div class="fat">${linhas}<p class="ind-fonte">A barra é o realizado; o traço é a meta do mês. Cada mês parte da meta do mês anterior.</p></div>`;
+}
+
+/* ---------- Função ---------- */
+function pessoaAtual(f) {
+  const lista = S.pessoas[f.id];
+  if (!lista.includes(S.pessoaSel[f.id])) S.pessoaSel[f.id] = lista[0];
+  return S.pessoaSel[f.id];
+}
+function telaFuncao(f) {
+  const pid = pessoaAtual(f);
+  const modo = S.modo[f.id] || "lancar";
+  const sub = S.sub[f.id] || "contrato";
+  const chips = S.pessoas[f.id].map(p => `<button class="chip" aria-pressed="${p === pid}" data-pessoa="${p}">${esc(S.dados[p].nome)}</button>`).join("");
+  const cab = `
+    <div class="cab-funcao">
+      <div><h1>${esc(f.nome)}</h1><p class="sub">${esc(f.resumo)}</p></div>
+      <div class="seg" role="group" aria-label="Seção">
+        <button data-sub="contrato" aria-pressed="${sub === "contrato"}">Contrato</button>
+        <button data-sub="rotina" aria-pressed="${sub === "rotina"}">Rotina do dia</button>
+      </div>
+    </div>
+    <div class="pessoas">${chips}<button class="chip add" data-acao="add-pessoa">+ pessoa</button>
+      <label class="ind-fonte" for="nome-${pid}" style="margin-left:8px">Nome no contrato</label>
+      <input class="nome-in" id="nome-${pid}" data-nome="${pid}" value="${esc(S.dados[pid].nome)}">
+      ${S.pessoas[f.id].length > 1 ? `<button class="btn" data-acao="rem-pessoa">Remover</button>` : ""}
+    </div>`;
+  if (sub === "rotina") return cab + telaRotina(f, pid);
+  return cab + `
+    <div class="grade">
+      <div class="coluna">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <div class="seg" role="group" aria-label="Modo">
+            <button data-modo="lancar" aria-pressed="${modo === "lancar"}">Acompanhar</button>
+            <button data-modo="simular" aria-pressed="${modo === "simular"}">Simular</button>
+          </div>
+          ${modo === "simular" ? `<div class="acoes"><button class="btn" data-sim="lancado">Partir do lançado</button><button class="btn" data-sim="meta">Tudo na meta</button><button class="btn" data-sim="base">Tudo na base</button></div>`
+            : `<span class="ind-fonte">Salvo neste navegador.</span>`}
+        </div>
+        ${modo === "simular" ? tabelaSim(f, pid) : tabelaLancar(f, pid)}
+      </div>
+      <aside class="placar${modo === "simular" ? " sim" : ""}" id="placar" aria-live="polite"></aside>
+    </div>`;
+}
+
+function celulaProg(p, peso, idp) {
+  if (p === null) return `<td class="d" id="${idp}-p"><span class="vazio">—</span></td><td class="d" id="${idp}-n"><span class="vazio">—</span></td>`;
+  return `<td class="d" id="${idp}-p"><div class="prog"><span class="barra"><i class="${p >= 1 ? "cheio" : ""}" style="width:${p * 100}%"></i></span><span class="num">${Math.round(p * 100)}%</span></div></td>
+    <td class="d" id="${idp}-n"><span class="pts">${nf2.format(p * peso)}</span></td>`;
+}
+function mediaProg(fn) { const ps = MESES.map(m => fn(m.id)).filter(p => p !== null); return ps.length ? ps.reduce((a, b) => a + b, 0) / ps.length : null; }
+
+function tabelaLancar(f, pid) {
+  const d = S.dados[pid];
+  const inp = (id, val, extra = "") => `<input class="cel" inputmode="decimal" id="${id}" value="${temValor(val) ? val : ""}" ${extra}>`;
+  const head = `<thead><tr><th>Indicador</th><th class="d">Peso</th><th class="d">Meta</th><th class="d">Base</th>${MESES.map(m => `<th class="d">${m.curto}</th>`).join("")}<th class="d">Progresso</th><th class="d">Pontos</th></tr></thead>`;
+
+  // empresa
+  let emp = "";
+  EMPRESA.forEach(ind => {
+    let meta, base;
+    if (ind.id === "fat") { meta = `<span class="num">130 · 150 · 200 mil</span>`; base = inp("emp-baseSet", S.empresa.baseSet, 'data-emp-base="baseSet" aria-label="Faturamento de setembro"'); }
+    else if (ind.id === "sat") { meta = `<span class="num" id="meta-sat">${fmt(metaSat(), "%")}</span>`; base = inp("emp-satBase", S.empresa.satBase, 'data-emp-base="satBase" aria-label="Satisfação base"'); }
+    else { meta = `<span class="num">${fmtMeta(ind)}</span>`; base = `<span class="tag corte">corte</span>`; }
+    const cels = MESES.map(m => `<td class="d">${inp(`emp-${ind.id}-${m.id}`, S.empresa.meses[m.id]?.[ind.id], `data-emp="${ind.id}" data-mes="${m.id}" aria-label="${esc(ind.nome)} ${m.nome}"`)}</td>`).join("");
+    emp += `<tr><td><div class="ind-nome">${esc(ind.nome)}</div><div class="ind-fonte">${esc(ind.fonte)}</div></td>
+      <td class="d num">${nf1.format(ind.peso)}</td><td class="d">${meta}</td><td class="d">${base}</td>${cels}
+      ${celulaProg(mediaProg(mes => progEmpresa(ind, mes)), ind.peso, "emp-" + ind.id)}</tr>`;
+  });
+
+  // função
+  let fun = "";
+  if (f.entradas) {
+    f.entradas.forEach(e => {
+      fun += `<tr class="entrada"><td><div class="ind-nome">${esc(e.nome)}</div></td><td></td><td></td><td class="d"><span class="ind-fonte">lançar</span></td>
+        ${MESES.map(m => `<td class="d">${inp(`in-${pid}-${e.id}-${m.id}`, d.meses[m.id]?.[e.id], `data-in="${e.id}" data-mes="${m.id}" aria-label="${esc(e.nome)} ${m.nome}"`)}</td>`).join("")}<td></td><td></td></tr>`;
+    });
+  }
+  f.ind.forEach(ind => {
+    const base = ind.tipo === "corte" ? `<span class="tag corte">corte</span>` : inp(`base-${pid}-${ind.id}`, d.bases[ind.id], `data-base="${ind.id}" aria-label="Base ${esc(ind.nome)}"`);
+    const cels = MESES.map(m => {
+      if (ind.derivado) return `<td class="d num" id="der-${ind.id}-${m.id}">${fmt(valorPessoa(f, pid, ind, m.id), ind.un)}</td>`;
+      return `<td class="d">${inp(`v-${pid}-${ind.id}-${m.id}`, d.meses[m.id]?.[ind.id], `data-ind="${ind.id}" data-mes="${m.id}" aria-label="${esc(ind.nome)} ${m.nome}"`)}</td>`;
+    }).join("");
+    fun += `<tr><td><div class="ind-nome">${esc(ind.nome)}${ind.tipo === "corte" ? '<span class="tag corte">corte</span>' : ""}</div><div class="ind-fonte">${esc(ind.fonte)}</div></td>
+      <td class="d num">${nf1.format(ind.peso)}</td><td class="d num">${fmtMeta(ind)}</td><td class="d">${base}</td>${cels}
+      ${celulaProg(mediaProg(mes => progPessoa(f, pid, ind, mes)), ind.peso, "ind-" + ind.id)}</tr>`;
+  });
+
+  return `
+    <section class="bloco"><div class="bloco-cab"><h2>Meta individual · ${esc(f.nome)}</h2><span class="peso-total">peso 7</span></div>
+      <div class="rolagem"><table class="ct">${head}<tbody>${fun}</tbody></table></div></section>
+    <section class="bloco"><div class="bloco-cab"><h2>Metas da empresa</h2><span class="peso-total">peso 3 · iguais para todos</span></div>
+      <div class="rolagem"><table class="ct">${head}<tbody>${emp}</tbody></table></div></section>`;
+}
+
+/* ---------- Simulação ---------- */
+function faixaSlider(ind) {
+  if (ind.id === "fat") return [80000, 230000, 500];
+  if (ind.un === "%") return [0, 100, 0.5];
+  if (ind.un === "dias") return [0, 30, 0.5];
+  if (ind.un === "R$") return [15, 90, 0.5];
+  if (ind.dir === "min") return [0, 12, 1];
+  return [0, Math.ceil(ind.meta * 1.6), 0.1];
+}
+function simAtual(f, pid) {
+  const k = pid;
+  if (!S.sim[k]) S.sim[k] = simDe(f, pid, "lancado");
+  return S.sim[k];
+}
+function simDe(f, pid, tipo) {
+  const d = S.dados[pid];
+  const media = fn => { const vs = MESES.map(m => fn(m.id)).filter(temValor); return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null; };
+  const pessoa = {}, empresa = { fat: {} };
+  f.ind.forEach(ind => {
+    const base = ind.tipo === "corte" ? (ind.dir === "min" ? ind.meta * 1.5 : 0) : d.bases[ind.id];
+    if (tipo === "meta") pessoa[ind.id] = ind.meta;
+    else if (tipo === "base") pessoa[ind.id] = temValor(base) ? base : faixaSlider(ind)[0];
+    else { const v = media(mes => valorPessoa(f, pid, ind, mes)); pessoa[ind.id] = temValor(v) ? +v.toFixed(1) : (temValor(base) ? base : ind.meta); }
+  });
+  EMPRESA.forEach(ind => {
+    if (ind.id === "fat") MESES.forEach(m => {
+      const lanc = S.empresa.meses[m.id]?.fat;
+      empresa.fat[m.id] = tipo === "meta" ? FAT_META[m.id] : tipo === "base" ? (fatBase(m.id) ?? 100000) : (temValor(lanc) ? lanc : FAT_META[m.id] * 0.9);
+    });
+    else {
+      const meta = ind.id === "sat" ? (metaSat() ?? 75) : ind.meta;
+      const base = ind.id === "sat" ? (S.empresa.satBase ?? 60) : ind.meta * 1.5;
+      const v = media(mes => S.empresa.meses[mes]?.[ind.id]);
+      empresa[ind.id] = tipo === "meta" ? meta : tipo === "base" ? base : (temValor(v) ? +v.toFixed(1) : meta);
+    }
+  });
+  return { pessoa, empresa };
+}
+function slider(id, ind, v, attrs) {
+  const [mn, mx, st] = faixaSlider(ind);
+  return `<div class="sim-cel"><input type="range" id="${id}" min="${mn}" max="${mx}" step="${st}" value="${v}" ${attrs} aria-label="${esc(ind.nome)}"><output id="${id}-o">${fmt(v, ind.un)}</output></div>`;
+}
+function tabelaSim(f, pid) {
+  const sim = simAtual(f, pid);
+  const head = `<thead><tr><th>Indicador</th><th class="d">Peso</th><th class="d">Meta</th><th>Valor simulado</th><th class="d">Progresso</th><th class="d">Pontos</th></tr></thead>`;
+  let fun = "";
+  f.ind.forEach(ind => {
+    const p = progresso(ind, sim.pessoa[ind.id], S.dados[pid].bases[ind.id]);
+    fun += `<tr><td><div class="ind-nome">${esc(ind.nome)}${ind.tipo === "corte" ? '<span class="tag corte">corte</span>' : ""}</div><div class="ind-fonte">${ind.tipo === "corte" ? "dentro do limite vale o peso inteiro" : "base " + fmt(S.dados[pid].bases[ind.id], ind.un)}</div></td>
+      <td class="d num">${nf1.format(ind.peso)}</td><td class="d num">${fmtMeta(ind)}</td>
+      <td>${slider(`s-${ind.id}`, ind, sim.pessoa[ind.id], `data-s="${ind.id}"`)}</td>${celulaProg(p, ind.peso, "sind-" + ind.id)}</tr>`;
+  });
+  let emp = "";
+  EMPRESA.forEach(ind => {
+    if (ind.id === "fat") {
+      MESES.forEach(m => {
+        const p = progresso(ind, sim.empresa.fat[m.id], fatBase(m.id), FAT_META[m.id]);
+        emp += `<tr><td><div class="ind-nome">Faturamento · ${m.nome}</div><div class="ind-fonte">base ${fmt(fatBase(m.id), "R$")}</div></td>
+          <td class="d num">${nf1.format(ind.peso)}<span class="ind-fonte"> ÷3</span></td><td class="d num">${fmt(FAT_META[m.id], "R$")}</td>
+          <td>${slider(`s-fat-${m.id}`, ind, sim.empresa.fat[m.id], `data-sfat="${m.id}"`)}</td>${celulaProg(p, ind.peso / 3, "sfat-" + m.id)}</tr>`;
+      });
+    } else {
+      const p = ind.id === "sat" ? progresso(ind, sim.empresa.sat, S.empresa.satBase, metaSat()) : progresso(ind, sim.empresa[ind.id], null);
+      emp += `<tr><td><div class="ind-nome">${esc(ind.nome)}${ind.tipo === "corte" ? '<span class="tag corte">corte</span>' : ""}</div><div class="ind-fonte">${esc(ind.fonte)}</div></td>
+        <td class="d num">${nf1.format(ind.peso)}</td><td class="d num">${ind.id === "sat" ? fmt(metaSat(), "%") : fmtMeta(ind)}</td>
+        <td>${slider(`s-e-${ind.id}`, ind, sim.empresa[ind.id], `data-se="${ind.id}"`)}</td>${celulaProg(p, ind.peso, "se-" + ind.id)}</tr>`;
+    }
+  });
+  return `
+    <p class="ind-fonte">A simulação não mexe no que foi lançado. Cada valor vale para os três meses; o faturamento tem um valor por mês porque a meta sobe.</p>
+    <section class="bloco"><div class="bloco-cab"><h2>Meta individual · ${esc(f.nome)}</h2><span class="peso-total">peso 7</span></div>
+      <div class="rolagem"><table class="ct" style="min-width:680px">${head}<tbody>${fun}</tbody></table></div></section>
+    <section class="bloco"><div class="bloco-cab"><h2>Metas da empresa</h2><span class="peso-total">peso 3</span></div>
+      <div class="rolagem"><table class="ct" style="min-width:680px">${head}<tbody>${emp}</tbody></table></div></section>`;
+}
+
+/* ---------- Placar ---------- */
+function atualizarPlacar() {
+  const f = FUNCOES.find(x => x.id === S.aba);
+  const el = document.getElementById("placar"); if (!f || !el) return;
+  const pid = pessoaAtual(f);
+  const simulando = (S.modo[f.id] || "lancar") === "simular";
+  const sim = simulando ? simAtual(f, pid) : null;
+  const r = resultado(f, pid, sim);
+  const nota = r.nota;
+  const fx = nota === null ? null : faixa(nota);
+  const prox = nota === null ? null : proxima(nota);
+  const cores = ["var(--f0)", "var(--f1)", "var(--f2)", "var(--f3)", "var(--f4)"];
+  const faixasHtml = BONUS.map((b, i) => `<span style="width:${(Math.min(b.ate, 10) - b.de) * 10}%;background:${cores[i]}" title="${b.de} a ${Math.min(b.ate, 10)}: ${brl.format(b.valor)}"></span>`).join("");
+  const alav = alavanca(f, pid, sim);
+  let dica = "";
+  if (nota !== null) {
+    dica = prox ? `<span>Faltam <b>${nf2.format(prox.de - nota)} ponto${prox.de - nota >= 1.995 ? "s" : ""}</b> para ${brl.format(prox.valor)}.</span>` : `<span><b>Faixa máxima.</b></span>`;
+    if (alav && alav.falta > 0.01) dica += `<span>Maior alavanca: <b>${esc(alav.nome)}</b>, com ${nf2.format(alav.falta)} ponto${alav.falta >= 1.995 ? "s" : ""} ainda na mesa.</span>`;
+    if (!simulando && r.lancados < 3) dica += `<span class="ind-fonte">Parcial: ${r.lancados} de 3 meses lançados.</span>`;
+  }
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <span class="rotulo">${simulando ? "Simulação" : "Nota do trimestre"}</span>
+      ${nota === null ? '<span class="estado alerta">sem lançamento</span>' : fx.valor ? '<span class="estado ok">com bônus</span>' : '<span class="estado erro">abaixo de 6</span>'}
+    </div>
+    <div class="nota-grande"><span class="n" id="nota-n">${nota === null ? "—" : nf1.format(nota)}</span><span class="de">/ 10</span></div>
+    <div><span class="rotulo">Bônus</span><div class="bonus">${fx ? brl.format(fx.valor) : "—"}</div></div>
+    <div class="regua"><div class="faixas">${faixasHtml}</div>${nota !== null ? `<span class="marcador" style="left:${Math.min(nota, 10) * 10}%"></span>` : ""}
+      <div class="regua-rot"><span>0</span><span style="margin-left:52%">6</span><span>7</span><span>8</span><span>9</span><span>10</span></div></div>
+    <div class="meses">${r.meses.map((m, i) => `<div class="mes"><span class="m">${MESES[i].curto}</span><span class="v">${m.nota === null ? "—" : nf1.format(m.nota)}</span></div>`).join("")}</div>
+    ${dica ? `<div class="dica">${dica}</div>` : ""}`;
+}
+
+/* ---------- Rotina ---------- */
+const hoje = () => new Date().toISOString().slice(0, 10);
+function minutos(hhmm) { const m = /^(\d{2}):(\d{2})/.exec(hhmm); return m ? +m[1] * 60 + +m[2] : null; }
+function telaRotina(f, pid) {
+  const r = ROTINAS[f.id];
+  const dia = hoje();
+  const marc = (S.checks[pid] || {})[dia] || {};
+  const agora = new Date(); const min = agora.getHours() * 60 + agora.getMinutes();
+  const feitos = r.agenda.filter((_, i) => marc[i]).length;
+  const itens = r.agenda.map(([h, t], i) => {
+    const ini = minutos(h), fim = minutos(h.split("–")[1]?.trim() || "");
+    const ativo = ini !== null && fim !== null && min >= ini && min < fim;
+    return `<li class="${marc[i] ? "feito" : ""}${ativo ? " agora" : ""}"><input type="checkbox" id="chk-${pid}-${i}" data-chk="${i}" ${marc[i] ? "checked" : ""}>
+      <label class="hora" for="chk-${pid}-${i}">${esc(h)}</label><span class="txt">${esc(t)}</span></li>`;
+  }).join("");
+  const dataBr = new Date(dia + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+  return `
+    ${r.pendente ? `<div class="aviso"><span>${esc(r.pendente)}</span></div>` : ""}
+    <div class="rotina">
+      <section class="bloco">
+        <div class="bloco-cab"><h2>Agenda de ${esc(dataBr)}</h2>
+          <span class="progresso-dia"><span class="barra"><i class="${feitos === r.agenda.length ? "cheio" : ""}" style="width:${feitos / r.agenda.length * 100}%"></i></span><span class="num">${feitos}/${r.agenda.length}</span></span></div>
+        <ul class="agenda">${itens}</ul>
+      </section>
+      <div class="coluna">
+        <section class="bloco"><div class="bloco-cab"><h2>Regras da rotina</h2></div><ul class="lista">${r.regras.map(x => `<li>${esc(x)}</li>`).join("")}</ul></section>
+        <section class="bloco"><div class="bloco-cab"><h2>Na revisão de sexta</h2></div><ul class="lista">${r.sexta.map(x => `<li>${esc(x)}</li>`).join("")}</ul></section>
+        <section class="bloco"><div class="bloco-cab"><h2>Daily às 09:30</h2></div>
+          <p class="texto">Só exceções, até 3 minutos por pessoa, na ordem TI → gestores → social media → design → CS. O que não se resolve em 1 minuto vai para o bloco de impedimentos das 09:50.</p></section>
+      </div>
+    </div>`;
+}
+
+/* ---------- Regras ---------- */
+function telaRegras() {
+  const tab = BONUS.map(b => `<tr><td class="num">${b.de === 0 ? "abaixo de 6" : b.ate > 10 ? "9 ou mais" : `${b.de} a ${b.ate}`}</td><td class="d num">${brl.format(b.valor)}</td></tr>`).join("");
+  return `
+    <div class="cab-funcao"><div><h1>Regras do contrato</h1><p class="sub">O que vale para todas as funções no quarto trimestre de 2026.</p></div></div>
+    <div class="grade" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+      <section class="bloco"><div class="bloco-cab"><h2>Como a nota é feita</h2></div><div class="texto">
+        <p>Cada linha tem peso. Os pesos somam 10: <b>3 da empresa</b>, iguais para todos, e <b>7 da função</b>.</p>
+        <p><b>Linha gradual:</b> progresso = (realizado − base) ÷ (meta − base), travado entre 0% e 100%. Funciona também quando menor é melhor, com a meta abaixo da base.</p>
+        <p><b>Linha de corte</b> (metas "até X"): dentro do limite vale o peso inteiro; fora, zero.</p>
+        <p>Pontos da linha = progresso × peso. <b>Nota do mês</b> = soma dos pontos. <b>Nota do trimestre</b> = média das notas de outubro, novembro e dezembro.</p>
+        <p><b>Faturamento:</b> cada mês parte da meta do mês anterior. Outubro vai de setembro a R$ 130 mil, novembro de 130 a 150 mil e dezembro de 150 a 200 mil.</p>
+        <p><b>Gestor:</b> meta de leads = investimento planejado ÷ 40; CPL = investimento gasto ÷ leads, com limite de R$ 40. Somado na carteira, não em média por cliente.</p>
+      </div></section>
+      <div class="coluna">
+        <section class="bloco"><div class="bloco-cab"><h2>Bônus do trimestre</h2><span class="peso-total">limite de baixo incluso</span></div>
+          <table class="ct" style="min-width:0"><thead><tr><th>Nota</th><th class="d">Valor</th></tr></thead><tbody>${tab}</tbody></table></section>
+        <section class="bloco"><div class="bloco-cab"><h2>Ainda pendente</h2></div><ul class="lista">
+          <li>Links das planilhas de verba por cliente e do faturamento, para os números entrarem sozinhos.</li>
+          <li>De onde vêm os leads da carteira: a extração do Stract mostra conversas iniciadas, não leads de formulário.</li>
+          <li>Design: os 6 por dia são criativos no total ou só vídeos.</li>
+          <li>Rotina do gestor de tráfego.</li>
+        </ul></section>
+        <section class="bloco"><div class="bloco-cab"><h2>Dados deste painel</h2></div><div class="texto">
+          <p>Os lançamentos ficam salvos só neste navegador. Outra pessoa que abrir o link não vê o que você digitou.</p>
+          <div class="acoes"><button class="btn" data-acao="exemplo">Recarregar exemplo</button><button class="btn" data-acao="limpar">Apagar tudo e começar em branco</button></div>
+          <p id="confirma" class="ind-fonte" hidden></p>
+        </div></section>
+      </div>
+    </div>`;
+}
+
+/* ============================================================
+   Eventos
+   ============================================================ */
+const palco = document.getElementById("palco");
+let confirmar = null;
+palco.addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  const f = FUNCOES.find(x => x.id === S.aba);
+  if (t.dataset.ir) { S.aba = t.dataset.ir; S.pessoaSel[t.dataset.ir] = t.dataset.pid; salvar(); desenhar(); window.scrollTo(0, 0); return; }
+  if (t.dataset.pessoa) { S.pessoaSel[f.id] = t.dataset.pessoa; salvar(); desenhar(); return; }
+  if (t.dataset.sub) { S.sub[f.id] = t.dataset.sub; salvar(); desenhar(); return; }
+  if (t.dataset.modo) { S.modo[f.id] = t.dataset.modo; salvar(); desenhar(); return; }
+  if (t.dataset.sim) { const pid = pessoaAtual(f); S.sim[pid] = simDe(f, pid, t.dataset.sim); salvar(); desenhar(); return; }
+  const acao = t.dataset.acao;
+  if (acao === "add-pessoa") {
+    const id = f.id + "-" + Date.now().toString(36);
+    S.dados[id] = { nome: "Nova pessoa", bases: {}, meses: { out: {}, nov: {}, dez: {} } };
+    f.ind.forEach(ind => { if (ind.tipo === "gradual") S.dados[id].bases[ind.id] = baseSugerida(ind); });
+    if (f.id === "gestor") S.dados[id].bases.leadsPct = 70;
+    S.pessoas[f.id].push(id); S.pessoaSel[f.id] = id; salvar(); desenhar();
+    document.getElementById("nome-" + id)?.select();
+  }
+  if (acao === "rem-pessoa") {
+    const pid = pessoaAtual(f);
+    if (confirmar !== "rem-" + pid) { confirmar = "rem-" + pid; t.textContent = "Clique de novo para remover " + S.dados[pid].nome; return; }
+    S.pessoas[f.id] = S.pessoas[f.id].filter(p => p !== pid); delete S.dados[pid]; confirmar = null; salvar(); desenhar();
+  }
+  if (acao === "limpar" || acao === "exemplo") {
+    if (!S.exemplo && confirmar !== acao) { confirmar = acao; t.textContent = "Clique de novo para confirmar"; return; }
+    const aba = S.aba; S = acao === "limpar" ? vazio() : exemplo(); S.aba = aba; confirmar = null; salvar(); desenhar();
+  }
+});
+
+palco.addEventListener("input", e => {
+  const el = e.target;
+  const f = FUNCOES.find(x => x.id === S.aba);
+  if (el.dataset.nome) { S.dados[el.dataset.nome].nome = el.value || "Sem nome"; salvar(); document.querySelector(`[data-pessoa="${el.dataset.nome}"]`).textContent = S.dados[el.dataset.nome].nome; return; }
+  if (el.dataset.chk !== undefined) {
+    const pid = pessoaAtual(f); const dia = hoje();
+    S.checks[pid] = S.checks[pid] || {}; S.checks[pid][dia] = S.checks[pid][dia] || {};
+    S.checks[pid][dia][el.dataset.chk] = el.checked; salvar(); desenhar(); return;
+  }
+  // simulação
+  if (el.type === "range") {
+    const pid = pessoaAtual(f); const sim = simAtual(f, pid); const v = Number(el.value);
+    if (el.dataset.s) sim.pessoa[el.dataset.s] = v;
+    if (el.dataset.sfat) sim.empresa.fat[el.dataset.sfat] = v;
+    if (el.dataset.se) sim.empresa[el.dataset.se] = v;
+    salvar(); atualizarLinhasSim(f, pid); atualizarPlacar(); return;
+  }
+  // lançamento
+  const v = lerNum(el);
+  if (v !== null && Number.isNaN(v)) { el.classList.add("fora"); return; }
+  el.classList.remove("fora");
+  if (S.exemplo) S.exemplo = false;
+  if (el.dataset.empBase) S.empresa[el.dataset.empBase] = v;
+  else if (el.dataset.emp) { S.empresa.meses[el.dataset.mes] = S.empresa.meses[el.dataset.mes] || {}; S.empresa.meses[el.dataset.mes][el.dataset.emp] = v; }
+  else if (f) {
+    const pid = pessoaAtual(f); const d = S.dados[pid];
+    if (el.dataset.base) d.bases[el.dataset.base] = v;
+    else { const k = el.dataset.in || el.dataset.ind; d.meses[el.dataset.mes] = d.meses[el.dataset.mes] || {}; d.meses[el.dataset.mes][k] = v; }
+  }
+  salvar(); atualizarLinhasLancar(f);
+});
+
+function trocarProg(idp, p, peso) {
+  const a = document.getElementById(idp + "-p"), b = document.getElementById(idp + "-n"); if (!a || !b) return;
+  const tmp = document.createElement("tr"); tmp.innerHTML = celulaProg(p, peso, idp);
+  a.replaceWith(tmp.children[0]); b.replaceWith(tmp.children[0]);
+}
+function atualizarLinhasLancar(f) {
+  if (!f) return;
+  const pid = pessoaAtual(f);
+  EMPRESA.forEach(ind => trocarProg("emp-" + ind.id, mediaProg(mes => progEmpresa(ind, mes)), ind.peso));
+  const ms = document.getElementById("meta-sat"); if (ms) ms.textContent = fmt(metaSat(), "%");
+  f.ind.forEach(ind => {
+    if (ind.derivado) MESES.forEach(m => { const c = document.getElementById(`der-${ind.id}-${m.id}`); if (c) c.textContent = fmt(valorPessoa(f, pid, ind, m.id), ind.un); });
+    trocarProg("ind-" + ind.id, mediaProg(mes => progPessoa(f, pid, ind, mes)), ind.peso);
+  });
+  document.querySelector(".aviso")?.remove();
+  atualizarPlacar();
+}
+function atualizarLinhasSim(f, pid) {
+  const sim = simAtual(f, pid);
+  f.ind.forEach(ind => {
+    document.getElementById(`s-${ind.id}-o`).textContent = fmt(sim.pessoa[ind.id], ind.un);
+    trocarProg("sind-" + ind.id, progresso(ind, sim.pessoa[ind.id], S.dados[pid].bases[ind.id]), ind.peso);
+  });
+  MESES.forEach(m => {
+    document.getElementById(`s-fat-${m.id}-o`).textContent = fmt(sim.empresa.fat[m.id], "R$");
+    trocarProg("sfat-" + m.id, progresso(EMPRESA[0], sim.empresa.fat[m.id], fatBase(m.id), FAT_META[m.id]), EMPRESA[0].peso / 3);
+  });
+  EMPRESA.slice(1).forEach(ind => {
+    document.getElementById(`s-e-${ind.id}-o`).textContent = fmt(sim.empresa[ind.id], ind.un);
+    const p = ind.id === "sat" ? progresso(ind, sim.empresa.sat, S.empresa.satBase, metaSat()) : progresso(ind, sim.empresa[ind.id], null);
+    trocarProg("se-" + ind.id, p, ind.peso);
+  });
+}
+
+desenhar();
+</script>

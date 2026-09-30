@@ -92,6 +92,7 @@ scripts/
   tests/                 36 do linter + 16 da porta JS + 14 do Apps Script
 docs/
   painel-artifact.html   cópia versionada do painel publicado como Artifact
+  contrato-resultados.html  painel do contrato de resultados por função (Q4 2026)
   gravar-no-drive.md     o que dá e o que não dá para escrever no Google
 ```
 
