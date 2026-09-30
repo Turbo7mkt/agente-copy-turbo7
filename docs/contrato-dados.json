@@ -1,10 +1,39 @@
 {
- "atualizado_em": "2026-09-30T15:42+00:00",
+ "atualizado_em": "2026-09-30T15:46+00:00",
  "dados_ate": "2026-09-30",
  "fonte": "Google Drive · \"Stract - Clientes Visão Geral\" (19UuY5so8bPyOPYvoMMMeh58Z7Wnr4WktvXhZJy_39hY)",
  "regra_lead": "conversa iniciada no WhatsApp ou lead de formulário",
  "leads_de_formulario_na_fonte": false,
  "cpl_meta": 40.0,
+ "carteira": {
+  "Micheli": [
+   "DIANA PLANEJADOS NOVA",
+   "Diana Prime - T7 NOVA",
+   "Camminare Italinea - T7",
+   "Casa Nova I TURBO 7 - NOVA",
+   "Fast T7",
+   "Mabruk Italínea - T7",
+   "Tonol Planejados T7 NOVA",
+   "Maison Ettuali T7 NOVA",
+   "Planeta Móveis Sp",
+   "EFGE - T7",
+   "Decoralle - T7",
+   "Moinhos - Turbo 7",
+   "Turbo 7 - Higienópolis"
+  ],
+  "Tiago Vianna": [
+   "Atlantica Italínea [NOVA T7]",
+   "Pinheiro´s planejados 2",
+   "Formobili - T7",
+   "Casa e Cozinha - T7",
+   "PREEMIER-TURBO 7",
+   "Mhavi - T7",
+   "CA01 - Mendes e Machado",
+   "Nova Design T7",
+   "CA - Italínea Móvel Max - Boleto/PIX"
+  ],
+  "Davi": []
+ },
  "meses": {
   "2026-09": {
    "Micheli": {

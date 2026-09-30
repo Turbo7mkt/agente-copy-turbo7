@@ -104,6 +104,7 @@ def agregar(linhas):
         "regra_lead": "conversa iniciada no WhatsApp ou lead de formulário",
         "leads_de_formulario_na_fonte": False,
         "cpl_meta": CPL_META,
+        "carteira": CARTEIRA,
         "meses": meses,
     }
 
