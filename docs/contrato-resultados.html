@@ -255,7 +255,7 @@ const EMPRESA = [
 
 const FUNCOES = [
   {
-    id: "gestor", nome: "Gestor de tráfego", pessoas: ["Micheli", "Tiago Vianna"],
+    id: "gestor", nome: "Gestor de tráfego", pessoas: ["Michele", "Tiago"],
     resumo: "Volume de leads pelo investimento planejado, eficiência pelo investimento gasto e as copys da trilha de teste.",
     entradas: [
       { id: "plan", nome: "Investimento planejado da carteira", un: "R$", ajuda: "vazio = usa o investido" },
@@ -269,7 +269,7 @@ const FUNCOES = [
     ],
   },
   {
-    id: "cs", nome: "CS", pessoas: ["CS"],
+    id: "cs", nome: "CS", pessoas: ["Pablo"],
     resumo: "Segurar a carteira: cancelamento baixo, CPAG até R$ 300 em 70% dos clientes, reunião a cada 15 dias e onboarding rápido.",
     ind: [
       { id: "canc", nome: "Cancelamentos no mês", peso: 0.8, tipo: "corte", dir: "min", meta: 5, un: "%", fonte: "Cancelados ÷ ativos no início do mês" },
@@ -279,7 +279,7 @@ const FUNCOES = [
     ],
   },
   {
-    id: "ti", nome: "TI", pessoas: ["TI"],
+    id: "ti", nome: "TI", pessoas: ["Lucas", "Fernando"],
     resumo: "Dado certo no caminho inteiro: chamado no prazo, sem reincidência e implantação rápida.",
     ind: [
       { id: "cham", nome: "% de chamados resolvidos no prazo", peso: 1.1, tipo: "gradual", dir: "max", meta: 95, un: "%", fonte: "CockpitHub · P1 no dia, P2 24h, P3 48h" },
@@ -288,7 +288,7 @@ const FUNCOES = [
     ],
   },
   {
-    id: "social", nome: "Social Media", pessoas: ["Social Media"],
+    id: "social", nome: "Social Media", pessoas: ["Vitória", "Eveliy"],
     resumo: "Duas narrações por dia para o design editar e orgânico aprovado e publicado no prazo.",
     ind: [
       { id: "narr", nome: "Narrações gravadas por dia útil", peso: 1, tipo: "gradual", dir: "max", meta: 2, un: "n", fonte: "Planilha de Criativos · status Gravado" },
@@ -297,7 +297,7 @@ const FUNCOES = [
     ],
   },
   {
-    id: "design", nome: "Design", pessoas: ["Designer 1", "Designer 2"],
+    id: "design", nome: "Design", pessoas: ["Gabriel", "Michel"],
     resumo: "Volume de criativos por dia e criativo que o dono aprova de primeira.",
     ind: [
       { id: "qtd", nome: "Criativos entregues por dia útil", peso: 1.1, tipo: "gradual", dir: "max", meta: 6, un: "n", fonte: "Planilha de Criativos · status Pronto" },
@@ -458,6 +458,21 @@ function vazio() {
 }
 let S;
 try { S = JSON.parse(localStorage.getItem(CHAVE)) || exemplo(); } catch (e) { S = exemplo(); }
+// Nomes da equipe (30/09/2026): troca os nomes provisórios sem perder o que foi lançado.
+if (!S.nomesEquipe) {
+  const RENOMEAR = { "Micheli": "Michele", "Tiago Vianna": "Tiago", "CS": "Pablo", "TI": "Lucas", "Social Media": "Vitória", "Designer 1": "Gabriel", "Designer 2": "Michel" };
+  FUNCOES.forEach(f => {
+    const lista = S.pessoas[f.id] = S.pessoas[f.id] || [];
+    lista.forEach(pid => { const n = S.dados[pid]?.nome; if (RENOMEAR[n]) S.dados[pid].nome = RENOMEAR[n]; });
+    f.pessoas.forEach(nome => {
+      if (lista.some(pid => S.dados[pid]?.nome === nome)) return;
+      const id = f.id + "-" + nome.normalize("NFD").replace(/[^a-zA-Z]/g, "").toLowerCase();
+      S.dados[id] = { nome, bases: {}, meses: { out: {}, nov: {}, dez: {} } };
+      lista.push(id);
+    });
+  });
+  S.nomesEquipe = true;
+}
 if (!S.semDavi) {
   (S.pessoas.gestor || []).filter(pid => S.dados[pid]?.nome === "Davi").forEach(pid => { delete S.dados[pid]; delete S.sim[pid]; });
   S.pessoas.gestor = (S.pessoas.gestor || []).filter(pid => S.dados[pid]);

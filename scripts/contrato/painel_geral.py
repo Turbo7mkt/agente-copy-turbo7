@@ -47,12 +47,12 @@ ORIGEM_FORA_DO_CPL = {"Google Ads"}
 # Tirada das abas das planilhas "Controle dos Gestores" em 30/09/2026.
 # Cliente que ainda não entrou no Painel Geral aparece como "sem dados".
 CARTEIRA = {
-    "Micheli": [
+    "Michele": [
         "Diana GRU", "Diana Prime", "Camminare", "Casa Nova", "Fast", "Mabruk",
         "Tonol", "Maison", "Planeta", "EFGE", "Decoralle",
         "Di Casa Moinhos", "Di Casa Higienópolis",
     ],
-    "Tiago Vianna": [
+    "Tiago": [
         "Atlantica", "Nova Design", "Pinheiros", "Formobili", "Casa & Cozinha",
         "Preemier", "Mhavi", "Móvel Max", "BS Grajaú",
     ],

@@ -34,11 +34,11 @@ def test_historico_vira_pessoa_unica_com_funil_e_etapa_atual():
             crm("2026-08-30T10:00:00", "Atlantica", 5511999990003.0, "Fez Contato"),  # lead de agosto
         ],
     )
-    c = d["meses"]["2026-09"]["Tiago Vianna"]["contas"][0]
+    c = d["meses"]["2026-09"]["Tiago"]["contas"][0]
     assert (c["gasto"], c["leads"], c["qualificados"], c["agendados"], c["perdidos"]) == (400.0, 2, 2, 1, 1)
     assert c["cpl"] == 200.0 and c["cpag"] == 400.0 and c["dentro"] is False
-    assert d["meses"]["2026-08"]["Tiago Vianna"]["leads"] == 1
-    assert "Pinheiros" in d["meses"]["2026-09"]["Tiago Vianna"]["sem_dados"]
+    assert d["meses"]["2026-08"]["Tiago"]["leads"] == 1
+    assert "Pinheiros" in d["meses"]["2026-09"]["Tiago"]["sem_dados"]
 
 
 def test_semanas_dias_e_campanhas():
@@ -61,7 +61,7 @@ def test_google_fora_do_cpl_e_sem_dado_pessoal():
         CRM + [crm("2026-10-01T09:00:00", "EFGE", 5511988887777.0, "Fez Contato"),
                crm("2026-10-01T10:00:00", "EFGE", 5511988887778.0, "Fez Contato", origem="Google Ads")],
     )
-    c = d["meses"]["2026-10"]["Micheli"]["contas"][0]
+    c = d["meses"]["2026-10"]["Michele"]["contas"][0]
     assert c["leads"] == 2 and c["cpl"] == 80.0 and c["origens"] == {"Meta Ads": 1, "Google Ads": 1}
     texto = json.dumps(d, ensure_ascii=False)
     assert "Fulano" not in texto and "5511988887777" not in texto
