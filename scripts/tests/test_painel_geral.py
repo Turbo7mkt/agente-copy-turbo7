@@ -1,4 +1,4 @@
-"""Testa a soma do Painel Geral Consolidado (scripts/contrato/painel_geral.py).
+"""Testa o agrupamento do Painel Geral Consolidado (scripts/contrato/painel_geral.py).
 
 Uso:  python3 scripts/tests/test_painel_geral.py
 """
@@ -11,47 +11,60 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "contrato"))
 import painel_geral as p  # noqa: E402
 
 STRACT = [("Date", "Account Name", "Spend (Cost, Amount Spent)", "Campaign Name", "Cliente")]
-CRM = [("Cliente", "Plataforma", "Data/Hora", "Nome", "Telefone", "Origem", "Etapa")]
+CRM = [("Cliente", "Plataforma", "Data/Hora", "Nome", "Telefone", "Origem", "Etapa", "Campanha")]
 
 
-def st(dia, cliente, gasto):
-    return (datetime.fromisoformat(dia), "conta", gasto, "camp", cliente)
+def st(dia, cliente, gasto, campanha="CAMP A"):
+    return (datetime.fromisoformat(dia), "conta", gasto, campanha, cliente)
 
 
-def crm(quando, cliente, fone, etapa):
-    return (cliente, "Meta Ads", quando, "Fulano de Tal", fone, "Meta Ads", etapa)
+def crm(quando, cliente, fone, etapa, origem="Meta Ads", campanha="CAMP A"):
+    return (cliente, "Meta Ads", datetime.fromisoformat(quando), "Fulano de Tal", fone, origem, etapa, campanha)
 
 
-def test_lead_unico_no_mes_do_primeiro_registro():
+def test_historico_vira_pessoa_unica_com_funil_e_etapa_atual():
     d = p.agregar(
         STRACT + [st("2026-09-02", "Atlantica", 300.0), st("2026-09-03", "Atlantica", 100.0)],
         CRM + [
-            crm("2026/09/02 às 10:00:00", "Atlantica", 5511999990001.0, "Fez Contato"),
-            crm("2026/09/05 às 10:00:00", "Atlantica", 5511999990001.0, "Qualificado"),  # mesma pessoa
-            crm("2026/09/06 às 10:00:00", "Atlantica", 5511999990002.0, "Agendamento"),
-            crm("2026/08/30 às 10:00:00", "Atlantica", 5511999990003.0, "Fez Contato"),  # agosto
-            crm("2026/09/01 às 10:00:00", "Atlantica", 5511999990003.0, "Perdido"),
+            crm("2026-09-02T10:00:00", "Atlantica", 5511999990001.0, "Fez Contato"),
+            crm("2026-09-02T10:00:00", "Atlantica", 5511999990001.0, "Qualificado"),
+            crm("2026-09-02T10:00:00", "Atlantica", 5511999990001.0, "Perdido"),  # qualificou, hoje perdido
+            crm("2026-09-02T10:00:00", "Atlantica", 5511999990001.0, "Perdido"),  # linha repetida
+            crm("2026-09-06T10:00:00", "Atlantica", 5511999990002.0, "Agendamento"),
+            crm("2026-08-30T10:00:00", "Atlantica", 5511999990003.0, "Fez Contato"),  # lead de agosto
         ],
     )
-    t = d["meses"]["2026-09"]["Tiago Vianna"]
-    c = t["contas"][0]
-    assert (c["gasto"], c["leads"], c["qualificados"], c["agendados"]) == (400.0, 2, 2, 1)
-    assert c["cpl"] == 200.0 and c["dentro"] is False
-    assert "Pinheiros" in t["sem_dados"]
-    assert d["dados_ate"] == "2026-09-03"
+    c = d["meses"]["2026-09"]["Tiago Vianna"]["contas"][0]
+    assert (c["gasto"], c["leads"], c["qualificados"], c["agendados"], c["perdidos"]) == (400.0, 2, 2, 1, 1)
+    assert c["cpl"] == 200.0 and c["cpag"] == 400.0 and c["dentro"] is False
+    assert d["meses"]["2026-08"]["Tiago Vianna"]["leads"] == 1
+    assert "Pinheiros" in d["meses"]["2026-09"]["Tiago Vianna"]["sem_dados"]
 
 
-def test_json_sem_dado_pessoal():
-    d = p.agregar(STRACT + [st("2026-10-01", "Mabruk", 40.0)], CRM + [crm("2026/10/01 às 09:00:00", "Mabruk", 5511988887777.0, "Fez Contato")])
+def test_semanas_dias_e_campanhas():
+    d = p.agregar(
+        STRACT + [st("2026-09-14", "Mabruk", 50.0), st("2026-09-21", "Mabruk", 30.0, "CAMP B")],
+        CRM + [crm("2026-09-15T09:00:00", "Mabruk", 5511911110000.0, "Fez Contato"),
+               crm("2026-09-22T09:00:00", "Mabruk", 5511911110001.0, "Fez Contato", campanha="."),
+               crm("2026-09-22T09:30:00", "Mabruk", 5511911110002.0, "Fez Contato", campanha="23294274719")],
+    )
+    c = d["clientes"]["Mabruk"]
+    assert [w["semana"] for w in c["semanas"]] == ["2026-09-14", "2026-09-21"]
+    assert c["semanas"][0]["cpl"] == 50.0 and c["semanas"][1]["leads"] == 2
+    assert {k["campanha"] for k in c["campanhas"]["2026-09"]} == {"CAMP A", "CAMP B"}  # "." e ID saem
+    assert [x["dia"] for x in c["dias"]] == ["2026-09-14", "2026-09-15", "2026-09-21", "2026-09-22"]
+
+
+def test_google_fora_do_cpl_e_sem_dado_pessoal():
+    d = p.agregar(
+        STRACT + [st("2026-10-01", "EFGE", 80.0)],
+        CRM + [crm("2026-10-01T09:00:00", "EFGE", 5511988887777.0, "Fez Contato"),
+               crm("2026-10-01T10:00:00", "EFGE", 5511988887778.0, "Fez Contato", origem="Google Ads")],
+    )
+    c = d["meses"]["2026-10"]["Micheli"]["contas"][0]
+    assert c["leads"] == 2 and c["cpl"] == 80.0 and c["origens"] == {"Meta Ads": 1, "Google Ads": 1}
     texto = json.dumps(d, ensure_ascii=False)
     assert "Fulano" not in texto and "5511988887777" not in texto
-    assert d["meses"]["2026-10"]["Micheli"]["contas"][0]["dentro"] is True
-
-
-def test_cliente_sem_gestor():
-    d = p.agregar(STRACT + [st("2026-09-10", "Mobile Prime", 90.0)], CRM)
-    g = d["meses"]["2026-09"][p.SEM_GESTOR]
-    assert g["cpl"] is None and g["contas"][0]["conta"] == "Mobile Prime"
 
 
 if __name__ == "__main__":
