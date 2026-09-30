@@ -270,11 +270,12 @@ const FUNCOES = [
   },
   {
     id: "cs", nome: "CS", pessoas: ["CS"],
-    resumo: "Segurar a carteira: cancelamento baixo, todo cliente com reunião a cada 15 dias e onboarding rápido.",
+    resumo: "Segurar a carteira: cancelamento baixo, CPAG até R$ 300 em 70% dos clientes, reunião a cada 15 dias e onboarding rápido.",
     ind: [
-      { id: "canc", nome: "Cancelamentos no mês", peso: 1.1, tipo: "corte", dir: "min", meta: 5, un: "%", fonte: "Cancelados ÷ ativos no início do mês" },
-      { id: "reun", nome: "% da carteira com reunião nos últimos 15 dias", peso: 0.4, tipo: "gradual", dir: "max", meta: 100, un: "%", fonte: "Controle de clientes · aba ERICK, data da última reunião" },
-      { id: "onb", nome: "Tempo de onboarding", peso: 0.5, tipo: "corte", dir: "min", meta: 10, un: "dias", fonte: "Contrato até a 1ª campanha no ar" },
+      { id: "canc", nome: "Cancelamentos no mês", peso: 0.8, tipo: "corte", dir: "min", meta: 5, un: "%", fonte: "Cancelados ÷ ativos no início do mês" },
+      { id: "cpag", nome: "% da carteira com CPAG médio até R$ 300", peso: 0.5, tipo: "gradual", dir: "max", meta: 70, un: "%", fonte: "Painel Geral · investido ÷ agendados de cada cliente no mês", auto: true },
+      { id: "reun", nome: "% da carteira com reunião nos últimos 15 dias", peso: 0.3, tipo: "gradual", dir: "max", meta: 100, un: "%", fonte: "Controle de clientes · aba ERICK, data da última reunião" },
+      { id: "onb", nome: "Tempo de onboarding", peso: 0.4, tipo: "corte", dir: "min", meta: 10, un: "dias", fonte: "Contrato até a 1ª campanha no ar" },
     ],
   },
   {
@@ -345,6 +346,7 @@ const ROTINAS = {
       "Mais de 10 clientes no Box é alarme da carteira: vai para a daily com gestor e TI.",
       "Aprovação parada há mais de 24h ou brutos não enviados até o dia 20: cobrar o dono no mesmo dia.",
       "Compromisso não cumprido 2 vezes seguidas: mudar a abordagem ou levar ao Meet.",
+      "Meta da carteira: 70% dos clientes com CPAG médio de até R$ 300 no mês.",
     ],
     sexta: ["Clientes por bandeira e quantos no Box", "% da carteira com reunião na quinzena", "Cancelamentos no mês", "Tempo de onboarding"],
   },
@@ -423,14 +425,14 @@ function exemplo() {
       const r = ritmo[k % ritmo.length];
       const bases = {}, meses = { out: {}, nov: {}, dez: {} };
       f.ind.forEach(ind => {
-        if (ind.tipo === "gradual" && !ind.derivado) bases[ind.id] = baseSugerida(ind);
+        if (ind.tipo === "gradual" && !ind.derivado && !ind.auto) bases[ind.id] = baseSugerida(ind);
       });
       if (f.id === "gestor") {
         delete bases.leadsPct; // a base vem de setembro no Painel Geral
         MESES.slice(0, 2).forEach((m, i) => { meses[m.id] = { copys: +(2 + r[i]).toFixed(1) }; });
       } else {
         MESES.slice(0, 2).forEach((m, i) => {
-          f.ind.forEach(ind => {
+          f.ind.filter(ind => !ind.auto).forEach(ind => {
             if (ind.tipo === "corte") meses[m.id][ind.id] = ind.dir === "min" ? +(ind.meta * (r[i] > 0.7 ? 0.8 : 1.3)).toFixed(1) : ind.meta;
             else { const b = bases[ind.id]; meses[m.id][ind.id] = +(b + (ind.meta - b) * r[i]).toFixed(1); }
           });
@@ -504,8 +506,22 @@ function progEmpresa(ind, mes, sim) {
   return progresso(ind, v, null);
 }
 function autoGestor(nome, iso) { return AUTO?.meses?.[iso]?.[nome] || null; }
+const CPAG_LIMITE = 300;
+// % dos clientes com investimento no mês cujo CPAG (investido ÷ agendados) ficou em até R$ 300.
+// Cliente que investiu e não agendou ninguém conta como fora.
+function cpagCarteira(iso) {
+  const contas = Object.values(AUTO?.meses?.[iso] || {}).flatMap(g => g.contas || []).filter(c => c.gasto > 0);
+  if (!contas.length) return null;
+  const dentro = contas.filter(c => c.cpag !== null && c.cpag <= CPAG_LIMITE);
+  return { pct: +(dentro.length / contas.length * 100).toFixed(1), dentro: dentro.length, total: contas.length, contas };
+}
+function valorAuto(f, ind, mes) {
+  if (f.id === "cs" && ind.id === "cpag") return cpagCarteira(MES_ISO[mes])?.pct ?? null;
+  return null;
+}
 function mesDe(f, pid, mes) {
   const m = { ...(S.dados[pid].meses[mes] || {}) };
+  f.ind.filter(i => i.auto).forEach(i => { const v = valorAuto(f, i, mes); if (v !== null) m[i.id] = v; });
   if (f.id !== "gestor") return m;
   const a = autoGestor(S.dados[pid].nome, MES_ISO[mes]);
   if (a) { m.gasto = a.gasto; m.leads = a.leads; m.auto = true; }
@@ -515,7 +531,9 @@ function mesDe(f, pid, mes) {
 // base do % da meta de leads: setembro no Painel Geral, com o investido no lugar do planejado
 function baseDe(f, pid, ind) {
   const b = S.dados[pid].bases[ind.id];
-  if (temValor(b) || f.id !== "gestor" || ind.id !== "leadsPct") return b;
+  if (temValor(b)) return b;
+  if (f.id === "cs" && ind.id === "cpag") return cpagCarteira("2026-09")?.pct ?? null;
+  if (f.id !== "gestor" || ind.id !== "leadsPct") return b;
   const set = autoGestor(S.dados[pid].nome, "2026-09");
   return set && set.gasto > 0 ? +(set.leads / (set.gasto / 40) * 100).toFixed(1) : null;
 }
@@ -878,6 +896,7 @@ function tabelaLancar(f, pid) {
     const baseAuto = temValor(d.bases[ind.id]) ? null : baseDe(f, pid, ind);
     const base = ind.tipo === "corte" ? `<span class="tag corte">corte</span>` : inp(`base-${pid}-${ind.id}`, d.bases[ind.id], `data-base="${ind.id}" aria-label="Base ${esc(ind.nome)}"${temValor(baseAuto) ? ` placeholder="${nf1.format(baseAuto)}" title="Setembro no Painel Geral"` : ""}`);
     const cels = mesesVis().map(m => {
+      if (ind.auto && valorAuto(f, ind, m.id) !== null) return `<td class="d num">${fmt(valorAuto(f, ind, m.id), ind.un)}<span class="tag">Painel Geral</span></td>`;
       if (ind.derivado) return `<td class="d num" id="der-${ind.id}-${m.id}">${fmt(valorPessoa(f, pid, ind, m.id), ind.un)}</td>`;
       return `<td class="d">${inp(`v-${pid}-${ind.id}-${m.id}`, d.meses[m.id]?.[ind.id], `data-ind="${ind.id}" data-mes="${m.id}" aria-label="${esc(ind.nome)} ${m.nome}"`)}</td>`;
     }).join("");
@@ -892,6 +911,7 @@ function tabelaLancar(f, pid) {
     ${midia ? `<section class="bloco"><div class="bloco-cab"><h2>Dados de mídia da carteira</h2><span class="peso-total">alimentam % da meta de leads e CPL</span></div>
       <div class="rolagem"><table class="ct" style="min-width:560px"><thead><tr><th>Dado</th><th class="d">Setembro (base)</th>${mesesVis().map(m => `<th class="d">${m.curto}</th>`).join("")}</tr></thead><tbody>${midia}</tbody></table></div></section>` : ""}
     ${f.id === "gestor" ? blocoContas(d.nome) : ""}
+    ${f.id === "cs" ? blocoCpag() : ""}
     <section class="bloco"><div class="bloco-cab"><h2>Metas da empresa</h2><span class="peso-total">peso 8 · 80% · iguais para todos</span></div>
       <div class="rolagem"><table class="ct">${head}<tbody>${emp}</tbody></table></div></section>`;
 }
@@ -962,6 +982,24 @@ function blocoContas(nome) {
   <section class="bloco"><div class="bloco-cab"><h2>Semana a semana · ${sel ? esc(sel) : "carteira de " + esc(nome)}</h2>${sel ? `<button class="linkbtn" data-cliente="">ver a carteira inteira</button>` : `<span class="peso-total">últimas 10 semanas</span>`}</div>
     ${tabelaSemanas(somaSemanas(fonteSem))}</section>
   ${sel ? `<section class="bloco"><div class="bloco-cab"><h2>Campanhas · ${esc(sel)} · ${esc(nomeMesIso(iso))}</h2></div>${tabCamp}</section>` : ""}`;
+}
+
+/* ---------- CPAG por cliente (contrato do CS) ---------- */
+function blocoCpag() {
+  if (!AUTO) return "";
+  const isos = Object.keys(AUTO.meses).sort().filter(i => cpagCarteira(i));
+  if (!isos.length) return "";
+  S.contasMes = S.contasMes || {};
+  const iso = isos.includes(S.contasMes.cs) ? S.contasMes.cs : isos[isos.length - 1];
+  const r = cpagCarteira(iso);
+  const botoes = isos.map(i => `<button data-contas-mes="cs|${i}" aria-pressed="${i === iso}">${esc(nomeMesIso(i).replace(" de 2026", ""))}</button>`).join("");
+  const linhas = r.contas.slice().sort((a, b) => (a.cpag ?? 1e9) - (b.cpag ?? 1e9)).map(c => `<tr><td><div class="ind-nome">${esc(c.conta)}</div></td><td class="d num">${fmt(c.gasto, "R$")}</td><td class="d num">${nInt(c.agendados)}</td><td class="d num">${reais(c.cpag)}</td>
+    <td class="d">${c.cpag === null ? '<span class="estado erro">sem agendamento</span>' : c.cpag <= CPAG_LIMITE ? '<span class="estado ok">até R$ 300</span>' : '<span class="estado alerta">acima</span>'}</td></tr>`).join("");
+  const semDados = [...new Set(Object.values(AUTO.meses[iso]).flatMap(g => g.sem_dados || []))];
+  return `<section class="bloco"><div class="bloco-cab"><h2>CPAG por cliente</h2><span class="peso-total">${r.dentro} de ${r.total} clientes até R$ 300 · ${nf1.format(r.pct)}% · meta 70%</span></div>
+    <div style="padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="rotulo">Mês</span><div class="seg" role="group" aria-label="Mês">${botoes}</div></div>
+    <div class="rolagem"><table class="ct" style="min-width:560px"><thead><tr><th>Cliente</th><th class="d">Investido</th><th class="d">Agendados</th><th class="d">CPAG</th><th class="d">Até R$ 300</th></tr></thead><tbody>${linhas}</tbody></table></div>
+    <p class="ind-fonte" style="padding:8px 16px">CPAG = investido no Meta ÷ leads que chegaram a Agendamento no CRM. Cliente que investiu e não agendou ninguém conta como fora da meta.${semDados.length ? ` Fora da conta por não estarem no Painel Geral: ${semDados.map(esc).join(", ")}.` : ""}</p></section>`;
 }
 
 /* ---------- Simulação ---------- */
@@ -1170,7 +1208,7 @@ palco.addEventListener("click", e => {
   if (acao === "add-pessoa") {
     const id = f.id + "-" + Date.now().toString(36);
     S.dados[id] = { nome: "Nova pessoa", bases: {}, meses: { out: {}, nov: {}, dez: {} } };
-    f.ind.forEach(ind => { if (ind.tipo === "gradual") S.dados[id].bases[ind.id] = baseSugerida(ind); });
+    f.ind.forEach(ind => { if (ind.tipo === "gradual" && !ind.derivado && !ind.auto) S.dados[id].bases[ind.id] = baseSugerida(ind); });
     if (f.id === "gestor") S.dados[id].bases.leadsPct = 70;
     S.pessoas[f.id].push(id); S.pessoaSel[f.id] = id; salvar(); desenhar();
     document.getElementById("nome-" + id)?.select();
