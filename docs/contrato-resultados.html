@@ -258,7 +258,7 @@ const FUNCOES = [
       { id: "copys", nome: "Copys entregues por dia útil", un: "n" },
       { id: "plan", nome: "Investimento planejado da carteira", un: "R$" },
       { id: "gasto", nome: "Investimento gasto da carteira", un: "R$" },
-      { id: "leads", nome: "Leads gerados na carteira", un: "n" },
+      { id: "leads", nome: "Leads gerados na carteira (conversas + formulários)", un: "n" },
     ],
     ind: [
       { id: "copys", nome: "Copys entregues por dia útil", peso: 2, tipo: "gradual", dir: "max", meta: 3, un: "n", fonte: "Planilha Criativos Turbo7" },
@@ -320,6 +320,7 @@ const ROTINAS = {
       ["Fechamento", "Flags ao CS no Relatório diário; cliente em risco marcado no Discord na hora."],
     ],
     regras: [
+      "Lead = conversa no WhatsApp ou lead de formulário. CPL meta de R$ 40 em todas as contas.",
       "Meta de leads do cliente = investimento planejado ÷ 40.",
       "Crédito não pago 1 dia após o aviso vira flag financeira ao CS.",
       "Banco de roteiros e copys do mês seguinte vai ao dono 2 dias antes do Meet.",
@@ -860,14 +861,14 @@ function telaRegras() {
         <p><b>Linha de corte</b> (metas "até X"): dentro do limite vale o peso inteiro; fora, zero.</p>
         <p>Pontos da linha = progresso × peso. <b>Nota do mês</b> = soma dos pontos. <b>Nota do trimestre</b> = média das notas de outubro, novembro e dezembro.</p>
         <p><b>Faturamento:</b> cada mês parte da meta do mês anterior. Outubro vai de setembro a R$ 130 mil, novembro de 130 a 150 mil e dezembro de 150 a 200 mil.</p>
-        <p><b>Gestor:</b> meta de leads = investimento planejado ÷ 40; CPL = investimento gasto ÷ leads, com limite de R$ 40. Somado na carteira, não em média por cliente.</p>
+        <p><b>Gestor:</b> lead é conversa iniciada no WhatsApp ou lead de formulário, os dois contam igual. Meta de leads = investimento planejado ÷ 40; CPL = investimento gasto ÷ leads, com limite de R$ 40 em todas as contas. No contrato, soma-se a carteira inteira, sem média por cliente.</p>
       </div></section>
       <div class="coluna">
         <section class="bloco"><div class="bloco-cab"><h2>Bônus do trimestre</h2><span class="peso-total">limite de baixo incluso</span></div>
           <table class="ct" style="min-width:0"><thead><tr><th>Nota</th><th class="d">Valor</th></tr></thead><tbody>${tab}</tbody></table></section>
         <section class="bloco"><div class="bloco-cab"><h2>Ainda pendente</h2></div><ul class="lista">
           <li>Links das planilhas de verba por cliente e do faturamento, para os números entrarem sozinhos.</li>
-          <li>De onde vêm os leads da carteira: a extração do Stract mostra conversas iniciadas, não leads de formulário.</li>
+          <li>Leads de formulário: a extração do Stract só traz conversas do WhatsApp. Campanhas de formulário somaram R$ 50,3 mil em setembro sem os leads delas.</li>
           <li>Design: os 6 por dia são criativos no total ou só vídeos.</li>
           <li>Rotina do gestor de tráfego.</li>
         </ul></section>
