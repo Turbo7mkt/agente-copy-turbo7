@@ -849,12 +849,13 @@ function telaFuncao(f) {
             <button data-modo="lancar" aria-pressed="${modo === "lancar"}">Acompanhar</button>
             <button data-modo="simular" aria-pressed="${modo === "simular"}">Simular</button>
           </div>
-          <button class="btn${S.editando ? " forte" : ""}" data-acao="editar">${S.editando ? "Concluir edição" : "Editar linhas"}</button>
+          <div class="acoes"><button class="btn${S.novoInd?.[f.id] ? " forte" : ""}" data-acao="novo-ind">${S.novoInd?.[f.id] ? "Fechar novo indicador" : "+ Novo indicador"}</button>
+          <button class="btn${S.editando ? " forte" : ""}" data-acao="editar">${S.editando ? "Concluir edição" : "Editar linhas"}</button></div>
           ${modo === "simular" ? `<div class="acoes"><button class="btn" data-sim="lancado">Partir do lançado</button><button class="btn" data-sim="meta">Tudo na meta</button><button class="btn" data-sim="base">Tudo na base</button></div>`
             : `<span class="ind-fonte">Salvo neste navegador.</span>`}
         </div>
         ${removidasHtml(f)}
-        ${S.editando ? formNovaMeta(f) : ""}
+        ${S.editando || S.novoInd?.[f.id] ? formNovaMeta(f) : ""}
         ${modo === "simular" ? tabelaSim(f, pid) : tabelaLancar(f, pid)}
       </div>
       <aside class="placar${modo === "simular" ? " sim" : ""}" id="placar" aria-live="polite"></aside>
@@ -864,7 +865,7 @@ function telaFuncao(f) {
 function formNovaMeta(f) {
   const onde = DB ? (PODE_GRAVAR === false ? "Só o dono e os editores do painel criam metas; você pode ver." : "A meta nova vale para todos que abrem o link.") : "Sem o armazenamento compartilhado nesta visualização: a meta fica salva só neste navegador.";
   if (DB && PODE_GRAVAR === false) return `<div class="aviso"><span>${onde}</span></div>`;
-  return `<section class="bloco"><div class="bloco-cab"><h2>Nova meta</h2><span class="peso-total">${esc(onde)}</span></div>
+  return `<section class="bloco"><div class="bloco-cab"><h2>Novo indicador · ${esc(f.nome)}</h2><span class="peso-total">${esc(onde)}</span></div>
     <form id="form-meta" class="texto" style="max-width:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end">
       <label>Indicador<br><input class="nome-in" style="width:100%" id="nm-nome" required maxlength="90" placeholder="Ex.: % de leads respondidos em 5 min"></label>
       <label>Bloco<br><select id="nm-bloco" class="nome-in" style="width:100%"><option value="${f.id}">${esc(f.nome)} (peso 2)</option><option value="empresa">Empresa, todos (peso 8)</option></select></label>
@@ -874,7 +875,7 @@ function formNovaMeta(f) {
       <label>Unidade<br><select id="nm-un" class="nome-in" style="width:100%"><option value="%">%</option><option value="n">número</option><option value="R$">R$</option><option value="dias">dias úteis</option></select></label>
       <label>Peso<br><input class="nome-in" style="width:100%" id="nm-peso" inputmode="decimal" required placeholder="0,5"></label>
       <label>Fonte (opcional)<br><input class="nome-in" style="width:100%" id="nm-fonte" maxlength="90" placeholder="De onde sai o número"></label>
-      <button class="btn forte" type="submit">Adicionar meta</button>
+      <button class="btn forte" type="submit">Adicionar indicador</button>
     </form>
     <p class="ind-fonte" style="padding:0 16px 12px">O peso é relativo: as outras linhas do bloco se ajustam para ele continuar somando 2 (função) ou 8 (empresa). <span id="nm-msg"></span></p></section>`;
 }
@@ -891,7 +892,7 @@ async function salvarNovaMeta(form) {
   const msg = form.parentElement.querySelector("#nm-msg");
   if (!meta.nome || !isFinite(meta.meta) || !(meta.peso > 0)) { msg.textContent = "Preencha indicador, meta e um peso maior que zero."; return; }
   if (DB && PODE_GRAVAR !== false) {
-    try { await DB.collection("metas").add(meta); msg.textContent = "Meta adicionada."; return; }
+    try { await DB.collection("metas").add(meta); msg.textContent = "Indicador adicionado."; form.reset(); return; }
     catch (e) { if (e?.code === "invalid_argument") { PODE_GRAVAR = false; } msg.textContent = "Não consegui salvar para todos: " + (e?.message || e?.code) + "."; return; }
   }
   S.metasLocais = [...(S.metasLocais || []), { ...meta, id: "l-" + Date.now().toString(36) }];
@@ -902,7 +903,7 @@ function btnRem(bloco, id) {
   const lista = bloco === "empresa" ? empDe() : indDe(FUNCOES.find(f => f.id === bloco));
   if (lista.length <= 1) return `<span class="ind-fonte">última linha do bloco</span>`;
   const nova = metasDe(bloco).find(m => m.id === id);
-  if (nova) return `<button class="linkbtn rem" data-apagar-meta="${esc(nova.docId || nova.id)}">Apagar meta nova</button>`;
+  if (nova) return `<button class="linkbtn rem" data-apagar-meta="${esc(nova.docId || nova.id)}">Apagar indicador novo</button>`;
   return `<button class="linkbtn rem" data-rem-linha="${bloco}:${id}">Remover linha</button>`;
 }
 function removidasHtml(f) {
@@ -1282,6 +1283,7 @@ palco.addEventListener("click", e => {
   }
   const acao = t.dataset.acao;
   if (acao === "editar") { S.editando = !S.editando; salvar(); desenhar(); return; }
+  if (acao === "novo-ind") { S.novoInd = { ...(S.novoInd || {}), [f.id]: !S.novoInd?.[f.id] }; salvar(); desenhar(); document.getElementById("nm-nome")?.focus(); return; }
   if (acao === "add-pessoa") {
     const id = f.id + "-" + Date.now().toString(36);
     S.dados[id] = { nome: "Nova pessoa", bases: {}, meses: { out: {}, nov: {}, dez: {} } };
