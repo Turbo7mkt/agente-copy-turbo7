@@ -48,7 +48,6 @@ CARTEIRA = {
         "CA01 - Mendes e Machado", "Nova Design T7",
         "CA - Italínea Móvel Max - Boleto/PIX",
     ],
-    "Davi": [],
 }
 SEM_GESTOR = "Sem gestor"
 

@@ -194,6 +194,7 @@ input.nome-in { border: 1px solid var(--line-forte); border-radius: 7px; padding
 .fat-trilho b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
 .texto { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: var(--ink-suave); max-width: 80ch; }
 .texto code { font-family: var(--mono); font-size: 0.82rem; background: var(--surface-alt); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
+.linkbtn.rem { color: var(--erro); font-size: .78rem; margin-top: 4px; }
 .linkbtn { background: none; border: 0; padding: 0; color: var(--azul); cursor: pointer; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .marcador { transition: none; } }
 </style>
@@ -254,7 +255,7 @@ const EMPRESA = [
 
 const FUNCOES = [
   {
-    id: "gestor", nome: "Gestor de tráfego", pessoas: ["Micheli", "Tiago Vianna", "Davi"],
+    id: "gestor", nome: "Gestor de tráfego", pessoas: ["Micheli", "Tiago Vianna"],
     resumo: "Volume de leads pelo investimento planejado, eficiência pelo investimento gasto e as copys da trilha de teste.",
     entradas: [
       { id: "plan", nome: "Investimento planejado da carteira", un: "R$", ajuda: "vazio = usa o investido" },
@@ -456,7 +457,23 @@ function vazio() {
 }
 let S;
 try { S = JSON.parse(localStorage.getItem(CHAVE)) || exemplo(); } catch (e) { S = exemplo(); }
+if (!S.semDavi) {
+  (S.pessoas.gestor || []).filter(pid => S.dados[pid]?.nome === "Davi").forEach(pid => { delete S.dados[pid]; delete S.sim[pid]; });
+  S.pessoas.gestor = (S.pessoas.gestor || []).filter(pid => S.dados[pid]);
+  S.semDavi = true;
+}
 function salvar() { try { localStorage.setItem(CHAVE, JSON.stringify(S)); } catch (e) {} }
+
+/* Linhas removidas no modo de edição. O peso do bloco (8 da empresa, 2 da
+   função) se redistribui entre as linhas que ficam, na mesma proporção. */
+function ativas(lista, removidas, total) {
+  const fica = lista.filter(i => !(removidas || []).includes(i.id));
+  const soma = fica.reduce((a, i) => a + i.peso, 0) || 1;
+  return fica.map(i => ({ ...i, peso: +(i.peso * total / soma).toFixed(4) }));
+}
+const indDe = f => ativas(f.ind, S.removidas?.[f.id], 2);
+const empDe = () => ativas(EMPRESA, S.removidas?.empresa, 8);
+const pesoEmp = id => empDe().find(i => i.id === id)?.peso ?? 0;
 
 /* ============================================================
    Cálculo
@@ -518,8 +535,8 @@ function mesLancado(f, pid, mes) {
 // nota do mês = Σ peso × progresso; linha sem valor conta zero
 function notaMes(f, pid, mes, sim) {
   let n = 0;
-  EMPRESA.forEach(ind => { n += ind.peso * (progEmpresa(ind, mes, sim?.empresa) ?? 0); });
-  f.ind.forEach(ind => { n += ind.peso * (progPessoa(f, pid, ind, mes, sim?.pessoa) ?? 0); });
+  empDe().forEach(ind => { n += ind.peso * (progEmpresa(ind, mes, sim?.empresa) ?? 0); });
+  indDe(f).forEach(ind => { n += ind.peso * (progPessoa(f, pid, ind, mes, sim?.pessoa) ?? 0); });
   return n;
 }
 function resultado(f, pid, sim) {
@@ -534,8 +551,8 @@ function proxima(nota) { return BONUS.find(b => b.de > nota); }
 function alavanca(f, pid, sim) {
   const linhas = [];
   const media = fn => { const ps = MESES.map(m => fn(m.id)).filter(p => p !== null); return ps.length ? ps.reduce((a, b) => a + b, 0) / ps.length : 0; };
-  f.ind.forEach(ind => { const p = media(mes => progPessoa(f, pid, ind, mes, sim?.pessoa)); linhas.push({ nome: ind.nome, p, falta: ind.peso * (1 - p) }); });
-  EMPRESA.forEach(ind => { const p = media(mes => progEmpresa(ind, mes, sim?.empresa)); linhas.push({ nome: ind.nome + " (empresa)", p, falta: ind.peso * (1 - p) }); });
+  indDe(f).forEach(ind => { const p = media(mes => progPessoa(f, pid, ind, mes, sim?.pessoa)); linhas.push({ nome: ind.nome, p, falta: ind.peso * (1 - p) }); });
+  empDe().forEach(ind => { const p = media(mes => progEmpresa(ind, mes, sim?.empresa)); linhas.push({ nome: ind.nome + " (empresa)", p, falta: ind.peso * (1 - p) }); });
   return linhas.sort((a, b) => b.falta - a.falta)[0];
 }
 
@@ -592,7 +609,7 @@ function desenhar() {
 /* ---------- Equipe ---------- */
 function telaEquipe() {
   let total = 0, linhas = "";
-  FUNCOES.forEach(f => S.pessoas[f.id].forEach(pid => {
+  FUNCOES.forEach(f => (S.pessoas[f.id] || []).forEach(pid => {
     const r = resultado(f, pid);
     const b = r.nota !== null ? faixa(r.nota).valor : 0;
     total += b;
@@ -633,12 +650,16 @@ function graficoFat() {
 
 /* ---------- Função ---------- */
 function pessoaAtual(f) {
-  const lista = S.pessoas[f.id];
-  if (!lista.includes(S.pessoaSel[f.id])) S.pessoaSel[f.id] = lista[0];
+  const lista = S.pessoas[f.id] = S.pessoas[f.id] || [];
+  if (!lista.includes(S.pessoaSel[f.id])) S.pessoaSel[f.id] = lista[0] ?? null;
   return S.pessoaSel[f.id];
 }
 function telaFuncao(f) {
   const pid = pessoaAtual(f);
+  if (!pid) return `
+    <div class="cab-funcao"><div><h1>${esc(f.nome)}</h1><p class="sub">${esc(f.resumo)}</p></div></div>
+    <section class="bloco"><div class="texto"><p>Nenhuma pessoa nesta função. Inclua alguém para abrir o contrato.</p>
+      <div class="acoes"><button class="btn forte" data-acao="add-pessoa">+ pessoa</button></div></div></section>`;
   const modo = S.modo[f.id] || "lancar";
   const sub = S.sub[f.id] || "contrato";
   const chips = S.pessoas[f.id].map(p => `<button class="chip" aria-pressed="${p === pid}" data-pessoa="${p}">${esc(S.dados[p].nome)}</button>`).join("");
@@ -653,7 +674,7 @@ function telaFuncao(f) {
     <div class="pessoas">${chips}<button class="chip add" data-acao="add-pessoa">+ pessoa</button>
       <label class="ind-fonte" for="nome-${pid}" style="margin-left:8px">Nome no contrato</label>
       <input class="nome-in" id="nome-${pid}" data-nome="${pid}" value="${esc(S.dados[pid].nome)}">
-      ${S.pessoas[f.id].length > 1 ? `<button class="btn" data-acao="rem-pessoa">Remover</button>` : ""}
+      <button class="btn" data-acao="rem-pessoa">Remover ${esc(S.dados[pid].nome)}</button>
     </div>`;
   if (sub === "rotina") return cab + telaRotina(f, pid);
   return cab + `
@@ -664,15 +685,31 @@ function telaFuncao(f) {
             <button data-modo="lancar" aria-pressed="${modo === "lancar"}">Acompanhar</button>
             <button data-modo="simular" aria-pressed="${modo === "simular"}">Simular</button>
           </div>
+          <button class="btn${S.editando ? " forte" : ""}" data-acao="editar">${S.editando ? "Concluir edição" : "Editar linhas"}</button>
           ${modo === "simular" ? `<div class="acoes"><button class="btn" data-sim="lancado">Partir do lançado</button><button class="btn" data-sim="meta">Tudo na meta</button><button class="btn" data-sim="base">Tudo na base</button></div>`
             : `<span class="ind-fonte">Salvo neste navegador.</span>`}
         </div>
+        ${removidasHtml(f)}
         ${modo === "simular" ? tabelaSim(f, pid) : tabelaLancar(f, pid)}
       </div>
       <aside class="placar${modo === "simular" ? " sim" : ""}" id="placar" aria-live="polite"></aside>
     </div>`;
 }
 
+function btnRem(bloco, id) {
+  if (!S.editando) return "";
+  const lista = bloco === "empresa" ? empDe() : indDe(FUNCOES.find(f => f.id === bloco));
+  if (lista.length <= 1) return `<span class="ind-fonte">última linha do bloco</span>`;
+  return `<button class="linkbtn rem" data-rem-linha="${bloco}:${id}">Remover linha</button>`;
+}
+function removidasHtml(f) {
+  const nomes = [
+    ...(S.removidas?.[f.id] || []).map(id => ({ bloco: f.id, id, nome: f.ind.find(i => i.id === id)?.nome })),
+    ...(S.removidas?.empresa || []).map(id => ({ bloco: "empresa", id, nome: EMPRESA.find(i => i.id === id)?.nome + " (empresa, vale para todos)" })),
+  ].filter(x => x.nome);
+  if (!nomes.length) return "";
+  return `<div class="aviso"><span><strong>Linhas removidas:</strong> ${nomes.map(x => `${esc(x.nome)} <button class="linkbtn" data-rest-linha="${x.bloco}:${x.id}">restaurar</button>`).join(" · ")}</span></div>`;
+}
 function celulaProg(p, peso, idp) {
   if (p === null) return `<td class="d" id="${idp}-p"><span class="vazio">—</span></td><td class="d" id="${idp}-n"><span class="vazio">—</span></td>`;
   return `<td class="d" id="${idp}-p"><div class="prog"><span class="barra"><i class="${p >= 1 ? "cheio" : ""}" style="width:${p * 100}%"></i></span><span class="num">${Math.round(p * 100)}%</span></div></td>
@@ -687,13 +724,13 @@ function tabelaLancar(f, pid) {
 
   // empresa
   let emp = "";
-  EMPRESA.forEach(ind => {
+  empDe().forEach(ind => {
     let meta, base;
     if (ind.id === "fat") { meta = `<span class="num">130 · 150 · 200 mil</span>`; base = `<span class="num" title="Faturamento de setembro">${fmt(FAT_SETEMBRO, "R$")}</span>`; }
     else if (ind.id === "sat") { meta = `<span class="num" id="meta-sat">${fmt(metaSat(), "%")}</span>`; base = inp("emp-satBase", S.empresa.satBase, 'data-emp-base="satBase" aria-label="Satisfação base"'); }
     else { meta = `<span class="num">${fmtMeta(ind)}</span>`; base = `<span class="tag corte">corte</span>`; }
     const cels = MESES.map(m => `<td class="d">${inp(`emp-${ind.id}-${m.id}`, S.empresa.meses[m.id]?.[ind.id], `data-emp="${ind.id}" data-mes="${m.id}" aria-label="${esc(ind.nome)} ${m.nome}"`)}</td>`).join("");
-    emp += `<tr><td><div class="ind-nome">${esc(ind.nome)}</div><div class="ind-fonte">${esc(ind.fonte)}</div></td>
+    emp += `<tr><td><div class="ind-nome">${esc(ind.nome)}</div><div class="ind-fonte">${esc(ind.fonte)}</div>${btnRem("empresa", ind.id)}</td>
       <td class="d num">${fmtPeso(ind.peso)}</td><td class="d">${meta}</td><td class="d">${base}</td>${cels}
       ${celulaProg(mediaProg(mes => progEmpresa(ind, mes)), ind.peso, "emp-" + ind.id)}</tr>`;
   });
@@ -712,14 +749,14 @@ function tabelaLancar(f, pid) {
         }).join("")}</tr>`;
     });
   }
-  f.ind.forEach(ind => {
+  indDe(f).forEach(ind => {
     const baseAuto = temValor(d.bases[ind.id]) ? null : baseDe(f, pid, ind);
     const base = ind.tipo === "corte" ? `<span class="tag corte">corte</span>` : inp(`base-${pid}-${ind.id}`, d.bases[ind.id], `data-base="${ind.id}" aria-label="Base ${esc(ind.nome)}"${temValor(baseAuto) ? ` placeholder="${nf1.format(baseAuto)}" title="Setembro no Stract"` : ""}`);
     const cels = MESES.map(m => {
       if (ind.derivado) return `<td class="d num" id="der-${ind.id}-${m.id}">${fmt(valorPessoa(f, pid, ind, m.id), ind.un)}</td>`;
       return `<td class="d">${inp(`v-${pid}-${ind.id}-${m.id}`, d.meses[m.id]?.[ind.id], `data-ind="${ind.id}" data-mes="${m.id}" aria-label="${esc(ind.nome)} ${m.nome}"`)}</td>`;
     }).join("");
-    fun += `<tr><td><div class="ind-nome">${esc(ind.nome)}${ind.tipo === "corte" ? '<span class="tag corte">corte</span>' : ""}</div><div class="ind-fonte">${esc(ind.fonte)}</div></td>
+    fun += `<tr><td><div class="ind-nome">${esc(ind.nome)}${ind.tipo === "corte" ? '<span class="tag corte">corte</span>' : ""}</div><div class="ind-fonte">${esc(ind.fonte)}</div>${btnRem(f.id, ind.id)}</td>
       <td class="d num">${fmtPeso(ind.peso)}</td><td class="d num">${fmtMeta(ind)}</td><td class="d">${base}</td>${cels}
       ${celulaProg(mediaProg(mes => progPessoa(f, pid, ind, mes)), ind.peso, "ind-" + ind.id)}</tr>`;
   });
@@ -774,13 +811,13 @@ function simDe(f, pid, tipo) {
   const d = S.dados[pid];
   const media = fn => { const vs = MESES.map(m => fn(m.id)).filter(temValor); return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null; };
   const pessoa = {}, empresa = { fat: {} };
-  f.ind.forEach(ind => {
+  indDe(f).forEach(ind => {
     const base = ind.tipo === "corte" ? (ind.dir === "min" ? ind.meta * 1.5 : 0) : baseDe(f, pid, ind);
     if (tipo === "meta") pessoa[ind.id] = ind.meta;
     else if (tipo === "base") pessoa[ind.id] = temValor(base) ? base : faixaSlider(ind)[0];
     else { const v = media(mes => valorPessoa(f, pid, ind, mes)); pessoa[ind.id] = temValor(v) ? +v.toFixed(1) : (temValor(base) ? base : ind.meta); }
   });
-  EMPRESA.forEach(ind => {
+  empDe().forEach(ind => {
     if (ind.id === "fat") MESES.forEach(m => {
       const lanc = S.empresa.meses[m.id]?.fat;
       empresa.fat[m.id] = tipo === "meta" ? FAT_META[m.id] : tipo === "base" ? (fatBase(m.id) ?? 100000) : (temValor(lanc) ? lanc : FAT_META[m.id] * 0.9);
@@ -802,14 +839,14 @@ function tabelaSim(f, pid) {
   const sim = simAtual(f, pid);
   const head = `<thead><tr><th>Indicador</th><th class="d">Peso</th><th class="d">Meta</th><th>Valor simulado</th><th class="d">Progresso</th><th class="d">Pontos</th></tr></thead>`;
   let fun = "";
-  f.ind.forEach(ind => {
+  indDe(f).forEach(ind => {
     const p = progresso(ind, sim.pessoa[ind.id], baseDe(f, pid, ind));
     fun += `<tr><td><div class="ind-nome">${esc(ind.nome)}${ind.tipo === "corte" ? '<span class="tag corte">corte</span>' : ""}</div><div class="ind-fonte">${ind.tipo === "corte" ? "dentro do limite vale o peso inteiro" : "base " + fmt(baseDe(f, pid, ind), ind.un)}</div></td>
       <td class="d num">${fmtPeso(ind.peso)}</td><td class="d num">${fmtMeta(ind)}</td>
       <td>${slider(`s-${ind.id}`, ind, sim.pessoa[ind.id], `data-s="${ind.id}"`)}</td>${celulaProg(p, ind.peso, "sind-" + ind.id)}</tr>`;
   });
   let emp = "";
-  EMPRESA.forEach(ind => {
+  empDe().forEach(ind => {
     if (ind.id === "fat") {
       MESES.forEach(m => {
         const p = progresso(ind, sim.empresa.fat[m.id], fatBase(m.id), FAT_META[m.id]);
@@ -837,6 +874,7 @@ function atualizarPlacar() {
   const f = FUNCOES.find(x => x.id === S.aba);
   const el = document.getElementById("placar"); if (!f || !el) return;
   const pid = pessoaAtual(f);
+  if (!pid) return;
   const simulando = (S.modo[f.id] || "lancar") === "simular";
   const sim = simulando ? simAtual(f, pid) : null;
   const r = resultado(f, pid, sim);
@@ -908,6 +946,7 @@ function telaRegras() {
         <p>Cada linha tem peso. Os pesos somam 10: <b>8 da empresa (80%)</b>, iguais para todos, e <b>2 da função (20%)</b>.</p>
         <p><b>Linha gradual:</b> progresso = (realizado − base) ÷ (meta − base), travado entre 0% e 100%. Funciona também quando menor é melhor, com a meta abaixo da base.</p>
         <p><b>Linha de corte</b> (metas "até X"): dentro do limite vale o peso inteiro; fora, zero.</p>
+        <p><b>Editar linhas:</b> uma linha removida sai do cálculo e o peso dela se divide entre as que ficam no mesmo bloco, na proporção de cada uma. A empresa continua valendo 8 e a função 2.</p>
         <p>Pontos da linha = progresso × peso. <b>Nota do mês</b> = soma dos pontos. <b>Nota do trimestre</b> = média das notas de outubro, novembro e dezembro.</p>
         <p><b>Faturamento:</b> cada mês parte da meta do mês anterior. Outubro vai de R$ 80 mil (setembro) a R$ 130 mil, novembro de 130 a 150 mil e dezembro de 150 a 200 mil.</p>
         <p><b>Gestor:</b> lead é conversa iniciada no WhatsApp ou lead de formulário, os dois contam igual. Meta de leads = investimento planejado ÷ 40; CPL = investimento gasto ÷ leads, com limite de R$ 40 em todas as contas. No contrato, soma-se a carteira inteira, sem média por cliente.</p>
@@ -943,7 +982,15 @@ palco.addEventListener("click", e => {
   if (t.dataset.sub) { S.sub[f.id] = t.dataset.sub; salvar(); desenhar(); return; }
   if (t.dataset.modo) { S.modo[f.id] = t.dataset.modo; salvar(); desenhar(); return; }
   if (t.dataset.sim) { const pid = pessoaAtual(f); S.sim[pid] = simDe(f, pid, t.dataset.sim); salvar(); desenhar(); return; }
+  if (t.dataset.remLinha || t.dataset.restLinha) {
+    const [bloco, id] = (t.dataset.remLinha || t.dataset.restLinha).split(":");
+    S.removidas = S.removidas || {};
+    const l = new Set(S.removidas[bloco] || []);
+    t.dataset.remLinha ? l.add(id) : l.delete(id);
+    S.removidas[bloco] = [...l]; S.sim = {}; salvar(); desenhar(); return;
+  }
   const acao = t.dataset.acao;
+  if (acao === "editar") { S.editando = !S.editando; salvar(); desenhar(); return; }
   if (acao === "add-pessoa") {
     const id = f.id + "-" + Date.now().toString(36);
     S.dados[id] = { nome: "Nova pessoa", bases: {}, meses: { out: {}, nov: {}, dez: {} } };
@@ -1003,9 +1050,9 @@ function trocarProg(idp, p, peso) {
 function atualizarLinhasLancar(f) {
   if (!f) return;
   const pid = pessoaAtual(f);
-  EMPRESA.forEach(ind => trocarProg("emp-" + ind.id, mediaProg(mes => progEmpresa(ind, mes)), ind.peso));
+  empDe().forEach(ind => trocarProg("emp-" + ind.id, mediaProg(mes => progEmpresa(ind, mes)), ind.peso));
   const ms = document.getElementById("meta-sat"); if (ms) ms.textContent = fmt(metaSat(), "%");
-  f.ind.forEach(ind => {
+  indDe(f).forEach(ind => {
     if (ind.derivado) MESES.forEach(m => { const c = document.getElementById(`der-${ind.id}-${m.id}`); if (c) c.textContent = fmt(valorPessoa(f, pid, ind, m.id), ind.un); });
     trocarProg("ind-" + ind.id, mediaProg(mes => progPessoa(f, pid, ind, mes)), ind.peso);
   });
@@ -1014,15 +1061,15 @@ function atualizarLinhasLancar(f) {
 }
 function atualizarLinhasSim(f, pid) {
   const sim = simAtual(f, pid);
-  f.ind.forEach(ind => {
+  indDe(f).forEach(ind => {
     document.getElementById(`s-${ind.id}-o`).textContent = fmt(sim.pessoa[ind.id], ind.un);
     trocarProg("sind-" + ind.id, progresso(ind, sim.pessoa[ind.id], baseDe(f, pid, ind)), ind.peso);
   });
-  MESES.forEach(m => {
+  if (pesoEmp("fat")) MESES.forEach(m => {
     document.getElementById(`s-fat-${m.id}-o`).textContent = fmt(sim.empresa.fat[m.id], "R$");
-    trocarProg("sfat-" + m.id, progresso(EMPRESA[0], sim.empresa.fat[m.id], fatBase(m.id), FAT_META[m.id]), EMPRESA[0].peso / 3);
+    trocarProg("sfat-" + m.id, progresso(EMPRESA[0], sim.empresa.fat[m.id], fatBase(m.id), FAT_META[m.id]), pesoEmp("fat") / 3);
   });
-  EMPRESA.slice(1).forEach(ind => {
+  empDe().filter(i => i.id !== "fat").forEach(ind => {
     document.getElementById(`s-e-${ind.id}-o`).textContent = fmt(sim.empresa[ind.id], ind.un);
     const p = ind.id === "sat" ? progresso(ind, sim.empresa.sat, S.empresa.satBase, metaSat()) : progresso(ind, sim.empresa[ind.id], null);
     trocarProg("se-" + ind.id, p, ind.peso);

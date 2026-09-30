@@ -1,5 +1,5 @@
 {
- "atualizado_em": "2026-09-30T15:46+00:00",
+ "atualizado_em": "2026-09-30T15:59+00:00",
  "dados_ate": "2026-09-30",
  "fonte": "Google Drive · \"Stract - Clientes Visão Geral\" (19UuY5so8bPyOPYvoMMMeh58Z7Wnr4WktvXhZJy_39hY)",
  "regra_lead": "conversa iniciada no WhatsApp ou lead de formulário",
@@ -31,8 +31,7 @@
    "CA01 - Mendes e Machado",
    "Nova Design T7",
    "CA - Italínea Móvel Max - Boleto/PIX"
-  ],
-  "Davi": []
+  ]
  },
  "meses": {
   "2026-09": {
