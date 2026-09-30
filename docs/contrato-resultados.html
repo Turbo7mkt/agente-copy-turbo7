@@ -112,6 +112,7 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 table.ct { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-width: 760px; }
 table.ct th { text-align: left; font-weight: 600; font-size: 0.7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-fraco); padding: 8px 10px; background: var(--surface-alt); white-space: nowrap; }
 table.ct td { padding: 9px 10px; border-top: 1px solid var(--line); vertical-align: middle; }
+table.ct td:first-child { min-width: 210px; }
 table.ct th.d, table.ct td.d { text-align: right; }
 .ind-nome { font-weight: 600; line-height: 1.3; }
 .ind-fonte { font-size: 0.74rem; color: var(--ink-fraco); }
@@ -256,7 +257,6 @@ const FUNCOES = [
     id: "gestor", nome: "Gestor de tráfego", pessoas: ["Micheli", "Tiago Vianna", "Davi"],
     resumo: "Volume de leads pelo investimento planejado, eficiência pelo investimento gasto e as copys da trilha de teste.",
     entradas: [
-      { id: "copys", nome: "Copys entregues por dia útil", un: "n" },
       { id: "plan", nome: "Investimento planejado da carteira", un: "R$", ajuda: "vazio = usa o investido" },
       { id: "gasto", nome: "Investimento gasto da carteira", un: "R$" },
       { id: "leads", nome: "Leads gerados na carteira (conversas + formulários)", un: "n" },
@@ -698,17 +698,17 @@ function tabelaLancar(f, pid) {
   });
 
   // função
-  let fun = "";
+  let fun = "", midia = "";
   if (f.entradas) {
     const set = autoGestor(d.nome, "2026-09");
     f.entradas.forEach(e => {
       const setVal = set && (e.id === "gasto" || e.id === "leads") ? `<span class="num ind-fonte" title="Setembro, base">${fmt(set[e.id], e.un)}</span>` : `<span class="ind-fonte">${e.ajuda ? esc(e.ajuda) : "lançar"}</span>`;
-      fun += `<tr class="entrada"><td><div class="ind-nome">${esc(e.nome)}</div></td><td></td><td></td><td class="d">${setVal}</td>
+      midia += `<tr><td><div class="ind-nome">${esc(e.nome)}</div></td><td class="d">${setVal}</td>
         ${MESES.map(m => {
           const a = autoGestor(d.nome, MES_ISO[m.id]);
           if (a && (e.id === "gasto" || e.id === "leads")) return `<td class="d num">${fmt(a[e.id], e.un)}<span class="tag">Stract</span></td>`;
           return `<td class="d">${inp(`in-${pid}-${e.id}-${m.id}`, d.meses[m.id]?.[e.id], `data-in="${e.id}" data-mes="${m.id}" aria-label="${esc(e.nome)} ${m.nome}"`)}</td>`;
-        }).join("")}<td></td><td></td></tr>`;
+        }).join("")}</tr>`;
     });
   }
   f.ind.forEach(ind => {
@@ -726,115 +726,12 @@ function tabelaLancar(f, pid) {
   return `
     <section class="bloco"><div class="bloco-cab"><h2>Meta individual · ${esc(f.nome)}</h2><span class="peso-total">peso 7</span></div>
       <div class="rolagem"><table class="ct">${head}<tbody>${fun}</tbody></table></div></section>
+    ${midia ? `<section class="bloco"><div class="bloco-cab"><h2>Dados de mídia da carteira</h2><span class="peso-total">alimentam % da meta de leads e CPL</span></div>
+      <div class="rolagem"><table class="ct" style="min-width:560px"><thead><tr><th>Dado</th><th class="d">Setembro (base)</th>${MESES.map(m => `<th class="d">${m.curto}</th>`).join("")}</tr></thead><tbody>${midia}</tbody></table></div></section>` : ""}
     ${f.id === "gestor" ? blocoContas(d.nome) : ""}
     <section class="bloco"><div class="bloco-cab"><h2>Metas da empresa</h2><span class="peso-total">peso 3 · iguais para todos</span></div>
       <div class="rolagem"><table class="ct">${head}<tbody>${emp}</tbody></table></div></section>`;
 }
-
-/* ---------- Stract ao vivo pelo Google Drive ----------
-   Mesma soma de scripts/contrato/meta_stract.py, feita no navegador de quem abre.
-   O painel lê a planilha pelo conector Google Drive do próprio visitante e
-   refaz a leitura a cada hora enquanto estiver aberto. */
-const STRACT_ID = "19UuY5so8bPyOPYvoMMMeh58Z7Wnr4WktvXhZJy_39hY";
-const MESES_CONTRATO = ["2026-09", "2026-10", "2026-11", "2026-12"];
-let AO_VIVO = { estado: "carregando", msg: "", em: null };
-
-function lerCsv(texto) {
-  const linhas = []; let campo = "", linha = [], aspas = false;
-  for (let i = 0; i < texto.length; i++) {
-    const c = texto[i];
-    if (aspas) {
-      if (c === '"') { if (texto[i + 1] === '"') { campo += '"'; i++; } else aspas = false; }
-      else campo += c;
-    } else if (c === '"') aspas = true;
-    else if (c === ",") { linha.push(campo); campo = ""; }
-    else if (c === "\n" || c === "\r") {
-      if (c === "\r" && texto[i + 1] === "\n") i++;
-      linha.push(campo); linhas.push(linha); linha = []; campo = "";
-    } else campo += c;
-  }
-  if (campo || linha.length) { linha.push(campo); linhas.push(linha); }
-  return linhas;
-}
-const numBr = t => { t = (t || "").trim(); return t ? Number(t.replace(/\./g, "").replace(",", ".")) || 0 : 0; };
-function somarStract(texto, carteira) {
-  const [cab, ...rows] = lerCsv(texto.replace(/^\uFEFF/, ""));
-  const ix = n => cab.indexOf(n);
-  const iD = ix("Date"), iC = ix("Account Name"), iG = ix("Spend (Cost, Amount Spent)"), iCa = ix("Campaign Name"), iL = ix("Action Messaging Conversations Started (Onsite Conversion)");
-  if ([iD, iC, iG, iL].some(i => i < 0)) throw { code: "formato", message: "A planilha do Stract mudou de colunas." };
-  const gestorDe = conta => Object.keys(carteira).find(g => carteira[g].includes(conta)) || "Sem gestor";
-  const contas = {}; let ultima = "";
-  rows.forEach(r => {
-    const mes = (r[iD] || "").slice(0, 7);
-    if (!MESES_CONTRATO.includes(mes)) return;
-    if (r[iD] > ultima) ultima = r[iD];
-    const k = (contas[mes] ||= {})[r[iC]] ||= { gasto: 0, leads: 0, gasto_form: 0 };
-    const g = numBr(r[iG]); k.gasto += g; k.leads += numBr(r[iL]);
-    if ((r[iCa] || "").toUpperCase().includes("FORM")) k.gasto_form += g;
-  });
-  const r2 = x => Math.round(x * 100) / 100;
-  const meses = {};
-  Object.entries(contas).forEach(([mes, porConta]) => {
-    const gs = {};
-    Object.entries(porConta).sort((a, b) => b[1].gasto - a[1].gasto).forEach(([conta, v]) => {
-      const c = { conta, gasto: r2(v.gasto), leads: r2(v.leads), gasto_form: r2(v.gasto_form) };
-      c.cpl = c.leads ? r2(c.gasto / c.leads) : null; c.dentro = c.cpl !== null && c.cpl <= 40;
-      const g = gs[gestorDe(conta)] ||= { gasto: 0, leads: 0, gasto_form: 0, contas: [] };
-      g.contas.push(c); g.gasto = r2(g.gasto + c.gasto); g.leads = r2(g.leads + c.leads); g.gasto_form = r2(g.gasto_form + c.gasto_form);
-    });
-    Object.values(gs).forEach(g => { g.cpl = g.leads ? r2(g.gasto / g.leads) : null; });
-    meses[mes] = gs;
-  });
-  return { dados_ate: ultima, meses };
-}
-function base64Texto(b64) {
-  const bin = atob(b64); const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return new TextDecoder("utf-8").decode(bytes);
-}
-const MSG_MCP = {
-  server_not_connected: "Conecte o Google Drive em claude.ai → Configurações → Conectores para os números entrarem sozinhos.",
-  needs_reauth: "Reconecte o Google Drive em claude.ai → Configurações → Conectores.",
-  selection_required: "Escolha qual conta do Google Drive o painel deve usar.",
-  not_in_manifest: "O Google Drive não foi liberado para este painel. Ao abrir de novo, permita o acesso.",
-  blocked_by_policy: "A organização bloqueou o acesso ao Google Drive por este painel.",
-  approval_required: "O acesso ao Google Drive precisa de aprovação da organização.",
-};
-async function ligarStract() {
-  const mcp = await (window.claude?.use?.("mcp") ?? Promise.resolve(null)).catch(() => null);
-  if (!mcp) { AO_VIVO = { estado: "fixo", msg: "", em: null }; redesenharGestor(); return; }
-  mcp.watchTool("Google Drive", "download_file_content", { fileId: STRACT_ID, exportMimeType: "text/csv" }, ev => {
-    if (ev.type === "error") {
-      const e = ev.error || {};
-      const negado = ["needs_reauth", "server_not_connected", "blocked_by_policy", "approval_required", "not_in_manifest", "selection_required"].includes(e.code);
-      AO_VIVO = { estado: negado ? "negado" : "falha", msg: MSG_MCP[e.code] || ("Não consegui ler o Stract agora (" + (e.message || e.code) + "). Mostrando a última leitura."), em: AO_VIVO.em };
-      redesenharGestor(); return;
-    }
-    try {
-      const p = ev.result.payload || {};
-      const b64 = typeof p === "string" ? p : p.content;
-      if (!b64) throw { message: "A resposta do Google Drive veio sem o conteúdo da planilha." };
-      const carteira = AUTO?.carteira || CARTEIRA_PADRAO;
-      const vivo = somarStract(base64Texto(b64), carteira);
-      AUTO = { ...(AUTO || {}), ...vivo, carteira, atualizado_em: new Date(ev.result.cache?.storedAt || Date.now()).toISOString(), fonte_viva: true };
-      AO_VIVO = { estado: "ok", msg: "", em: AUTO.atualizado_em };
-    } catch (e) {
-      AO_VIVO = { estado: "falha", msg: "Li o Stract, mas não consegui somar: " + (e.message || e), em: AO_VIVO.em };
-    }
-    redesenharGestor();
-  }, { cache: { staleTime: 300000, gcTime: 3600000 }, refetchInterval: 3600000 });
-}
-// Redesenha só quando não há campo em edição, para não roubar o foco de quem digita.
-function redesenharGestor() {
-  const ativo = document.activeElement;
-  if (ativo && ativo.tagName === "INPUT" && ativo.type !== "checkbox") { setTimeout(redesenharGestor, 4000); return; }
-  desenhar();
-}
-const CARTEIRA_PADRAO = {
-  "Micheli": ["DIANA PLANEJADOS NOVA", "Diana Prime - T7 NOVA", "Camminare Italinea - T7", "Casa Nova I TURBO 7 - NOVA", "Fast T7", "Mabruk Italínea - T7", "Tonol Planejados T7 NOVA", "Maison Ettuali T7 NOVA", "Planeta Móveis Sp", "EFGE - T7", "Decoralle - T7", "Moinhos - Turbo 7", "Turbo 7 - Higienópolis"],
-  "Tiago Vianna": ["Atlantica Italínea [NOVA T7]", "Pinheiro´s planejados 2", "Formobili - T7", "Casa e Cozinha - T7", "PREEMIER-TURBO 7", "Mhavi - T7", "CA01 - Mendes e Machado", "Nova Design T7", "CA - Italínea Móvel Max - Boleto/PIX"],
-  "Davi": [],
-};
 
 /* ---------- Contas do gestor (Stract) ---------- */
 function blocoContas(nome) {
@@ -851,9 +748,8 @@ function blocoContas(nome) {
   }).join("");
   const dentro = g.contas.filter(c => c.dentro).length;
   const atual = new Date(AUTO.atualizado_em).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-  const selo = AUTO.fonte_viva ? `ao vivo · lido ${esc(atual)} · relê a cada hora` : `Stract · leitura de ${esc(atual)}`;
+  const selo = `Stract · leitura de ${esc(atual)}`;
   return `<section class="bloco"><div class="bloco-cab"><h2>Contas da carteira · ${esc(nomeMes)}</h2><span class="peso-total">${selo}</span></div>
-    ${AO_VIVO.msg ? `<div class="aviso" style="border-radius:0">${esc(AO_VIVO.msg)}</div>` : ""}
     ${!AUTO.leads_de_formulario_na_fonte && g.gasto_form > 0 ? `<div class="aviso" style="border-radius:0">Lead conta conversa no WhatsApp e formulário, mas o Stract só traz conversas. ${brl.format(g.gasto_form)} foram para campanhas de formulário sem os leads delas: o CPL real dessas contas é menor que o mostrado.</div>` : ""}
     <div class="rolagem"><table class="ct" style="min-width:560px"><thead><tr><th>Conta</th><th class="d">Investido</th><th class="d">Leads</th><th class="d">CPL</th><th class="d">Meta R$ 40</th></tr></thead>
     <tbody>${linhas}<tr><td><b>Carteira</b> · ${dentro} de ${g.contas.length} contas até R$ 40</td><td class="d num"><b>${fmt(g.gasto, "R$")}</b></td><td class="d num"><b>${nf1.format(g.leads).replace(",0", "")}</b></td><td class="d num"><b>${g.cpl === null ? "—" : brl2.format(g.cpl)}</b></td><td class="d">${g.cpl !== null && g.cpl <= 40 ? '<span class="estado ok">dentro</span>' : '<span class="estado alerta">acima</span>'}</td></tr></tbody></table></div></section>`;
@@ -1135,7 +1031,6 @@ function atualizarLinhasSim(f, pid) {
 desenhar();
 fetch("contrato-dados.json", { cache: "no-store" })
   .then(r => r.ok ? r.json() : null)
-  .then(j => { if (j && j.meses && !AUTO?.fonte_viva) { AUTO = j; desenhar(); } })
+  .then(j => { if (j && j.meses) { AUTO = j; desenhar(); } })
   .catch(() => {});
-ligarStract();
 </script>
