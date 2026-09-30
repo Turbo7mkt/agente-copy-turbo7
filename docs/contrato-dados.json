@@ -1,247 +1,182 @@
 {
- "atualizado_em": "2026-09-30T15:59+00:00",
+ "atualizado_em": "2026-09-30T16:03+00:00",
  "dados_ate": "2026-09-30",
- "fonte": "Google Drive · \"Stract - Clientes Visão Geral\" (19UuY5so8bPyOPYvoMMMeh58Z7Wnr4WktvXhZJy_39hY)",
- "regra_lead": "conversa iniciada no WhatsApp ou lead de formulário",
- "leads_de_formulario_na_fonte": false,
+ "fonte": "Google Drive · \"Painel Geral Consolidado\" (1A5u5lf4a3kzphmpstXp9AV3eVXJMFUAMRbOb8puToAU)",
+ "regra_lead": "pessoa única no CRM (formulário ou WhatsApp), no mês do primeiro registro",
+ "leads_de_formulario_na_fonte": true,
  "cpl_meta": 40.0,
  "carteira": {
   "Micheli": [
-   "DIANA PLANEJADOS NOVA",
-   "Diana Prime - T7 NOVA",
-   "Camminare Italinea - T7",
-   "Casa Nova I TURBO 7 - NOVA",
-   "Fast T7",
-   "Mabruk Italínea - T7",
-   "Tonol Planejados T7 NOVA",
-   "Maison Ettuali T7 NOVA",
-   "Planeta Móveis Sp",
-   "EFGE - T7",
-   "Decoralle - T7",
-   "Moinhos - Turbo 7",
-   "Turbo 7 - Higienópolis"
+   "Diana GRU",
+   "Diana Prime",
+   "Camminare",
+   "Casa Nova",
+   "Fast",
+   "Mabruk",
+   "Tonol",
+   "Maison",
+   "Planeta",
+   "EFGE",
+   "Decoralle",
+   "Di Casa Moinhos",
+   "Di Casa Higienópolis"
   ],
   "Tiago Vianna": [
-   "Atlantica Italínea [NOVA T7]",
-   "Pinheiro´s planejados 2",
-   "Formobili - T7",
-   "Casa e Cozinha - T7",
-   "PREEMIER-TURBO 7",
-   "Mhavi - T7",
-   "CA01 - Mendes e Machado",
-   "Nova Design T7",
-   "CA - Italínea Móvel Max - Boleto/PIX"
+   "Atlantica",
+   "Nova Design",
+   "Pinheiros",
+   "Formobili",
+   "Casa & Cozinha",
+   "Preemier",
+   "Mhavi",
+   "Móvel Max",
+   "BS Grajaú"
   ]
  },
  "meses": {
   "2026-09": {
    "Micheli": {
-    "gasto": 91093.26,
-    "leads": 4190.0,
-    "gasto_form": 28087.45,
+    "gasto": 74267.89,
+    "leads": 3059,
+    "qualificados": 95,
+    "agendados": 44,
+    "cpl": 24.28,
     "contas": [
      {
-      "conta": "DIANA PLANEJADOS NOVA",
+      "conta": "Diana GRU",
       "gasto": 33793.8,
-      "leads": 2121.0,
-      "gasto_form": 0.0,
-      "cpl": 15.93,
+      "leads": 2212,
+      "qualificados": 0,
+      "agendados": 0,
+      "cpl": 15.28,
       "dentro": true
      },
      {
-      "conta": "Diana Prime - T7 NOVA",
+      "conta": "Diana Prime",
       "gasto": 23998.93,
-      "leads": 1560.0,
-      "gasto_form": 2360.83,
-      "cpl": 15.38,
-      "dentro": true
-     },
-     {
-      "conta": "Camminare Italinea - T7",
-      "gasto": 8972.22,
-      "leads": 71.0,
-      "gasto_form": 8972.22,
-      "cpl": 126.37,
+      "leads": 490,
+      "qualificados": 0,
+      "agendados": 0,
+      "cpl": 48.98,
       "dentro": false
      },
      {
-      "conta": "Casa Nova I TURBO 7 - NOVA",
+      "conta": "Casa Nova",
       "gasto": 3462.09,
-      "leads": 45.0,
-      "gasto_form": 3462.09,
-      "cpl": 76.94,
+      "leads": 67,
+      "qualificados": 29,
+      "agendados": 16,
+      "cpl": 51.67,
       "dentro": false
      },
      {
-      "conta": "Fast T7",
+      "conta": "Fast",
       "gasto": 2965.1,
-      "leads": 30.0,
-      "gasto_form": 2965.1,
-      "cpl": 98.84,
+      "leads": 60,
+      "qualificados": 3,
+      "agendados": 1,
+      "cpl": 49.42,
       "dentro": false
      },
      {
-      "conta": "Mabruk Italínea - T7",
+      "conta": "Mabruk",
       "gasto": 2648.38,
-      "leads": 137.0,
-      "gasto_form": 0.0,
-      "cpl": 19.33,
+      "leads": 118,
+      "qualificados": 27,
+      "agendados": 18,
+      "cpl": 22.44,
       "dentro": true
      },
      {
-      "conta": "Tonol Planejados T7 NOVA",
+      "conta": "Tonol",
       "gasto": 2635.55,
-      "leads": 21.0,
-      "gasto_form": 2635.55,
-      "cpl": 125.5,
+      "leads": 34,
+      "qualificados": 21,
+      "agendados": 3,
+      "cpl": 77.52,
       "dentro": false
      },
      {
-      "conta": "Maison Ettuali T7 NOVA",
+      "conta": "Maison",
       "gasto": 2611.07,
-      "leads": 43.0,
-      "gasto_form": 0.0,
-      "cpl": 60.72,
+      "leads": 15,
+      "qualificados": 1,
+      "agendados": 1,
+      "cpl": 174.07,
       "dentro": false
      },
      {
-      "conta": "Planeta Móveis Sp",
-      "gasto": 2373.79,
-      "leads": 58.0,
-      "gasto_form": 59.33,
-      "cpl": 40.93,
-      "dentro": false
-     },
-     {
-      "conta": "EFGE - T7",
+      "conta": "EFGE",
       "gasto": 2152.97,
-      "leads": 40.0,
-      "gasto_form": 2152.97,
-      "cpl": 53.82,
-      "dentro": false
-     },
-     {
-      "conta": "Decoralle - T7",
-      "gasto": 2028.17,
-      "leads": 34.0,
-      "gasto_form": 2028.17,
-      "cpl": 59.65,
-      "dentro": false
-     },
-     {
-      "conta": "Moinhos - Turbo 7",
-      "gasto": 1736.24,
-      "leads": 14.0,
-      "gasto_form": 1736.24,
-      "cpl": 124.02,
-      "dentro": false
-     },
-     {
-      "conta": "Turbo 7 - Higienópolis",
-      "gasto": 1714.95,
-      "leads": 16.0,
-      "gasto_form": 1714.95,
-      "cpl": 107.18,
-      "dentro": false
+      "leads": 63,
+      "qualificados": 14,
+      "agendados": 5,
+      "cpl": 34.17,
+      "dentro": true
      }
     ],
-    "cpl": 21.74
+    "sem_dados": [
+     "Camminare",
+     "Decoralle",
+     "Di Casa Higienópolis",
+     "Di Casa Moinhos",
+     "Planeta"
+    ]
    },
    "Tiago Vianna": {
-    "gasto": 20273.65,
-    "leads": 270.0,
-    "gasto_form": 19335.64,
+    "gasto": 8643.08,
+    "leads": 234,
+    "qualificados": 77,
+    "agendados": 13,
+    "cpl": 36.94,
     "contas": [
      {
-      "conta": "Atlantica Italínea [NOVA T7]",
+      "conta": "Atlantica",
       "gasto": 7456.61,
-      "leads": 107.0,
-      "gasto_form": 7456.61,
-      "cpl": 69.69,
-      "dentro": false
+      "leads": 187,
+      "qualificados": 63,
+      "agendados": 10,
+      "cpl": 39.87,
+      "dentro": true
      },
      {
-      "conta": "Pinheiro´s planejados 2",
-      "gasto": 1976.58,
-      "leads": 22.0,
-      "gasto_form": 1976.58,
-      "cpl": 89.84,
-      "dentro": false
-     },
-     {
-      "conta": "Formobili - T7",
-      "gasto": 1891.65,
-      "leads": 19.0,
-      "gasto_form": 1891.65,
-      "cpl": 99.56,
-      "dentro": false
-     },
-     {
-      "conta": "Casa e Cozinha - T7",
-      "gasto": 1834.8,
-      "leads": 38.0,
-      "gasto_form": 1834.8,
-      "cpl": 48.28,
-      "dentro": false
-     },
-     {
-      "conta": "PREEMIER-TURBO 7",
-      "gasto": 1831.98,
-      "leads": 24.0,
-      "gasto_form": 1831.98,
-      "cpl": 76.33,
-      "dentro": false
-     },
-     {
-      "conta": "Mhavi - T7",
-      "gasto": 1649.6,
-      "leads": 1.0,
-      "gasto_form": 1649.6,
-      "cpl": 1649.6,
-      "dentro": false
-     },
-     {
-      "conta": "CA01 - Mendes e Machado",
-      "gasto": 1507.95,
-      "leads": 27.0,
-      "gasto_form": 1507.95,
-      "cpl": 55.85,
-      "dentro": false
-     },
-     {
-      "conta": "Nova Design T7",
+      "conta": "Nova Design",
       "gasto": 1186.47,
-      "leads": 24.0,
-      "gasto_form": 1186.47,
-      "cpl": 49.44,
-      "dentro": false
-     },
-     {
-      "conta": "CA - Italínea Móvel Max - Boleto/PIX",
-      "gasto": 938.01,
-      "leads": 8.0,
-      "gasto_form": 0.0,
-      "cpl": 117.25,
-      "dentro": false
+      "leads": 47,
+      "qualificados": 14,
+      "agendados": 3,
+      "cpl": 25.24,
+      "dentro": true
      }
     ],
-    "cpl": 75.09
+    "sem_dados": [
+     "BS Grajaú",
+     "Casa & Cozinha",
+     "Formobili",
+     "Mhavi",
+     "Móvel Max",
+     "Pinheiros",
+     "Preemier"
+    ]
    },
    "Sem gestor": {
     "gasto": 2885.42,
-    "leads": 81.0,
-    "gasto_form": 2885.42,
+    "leads": 82,
+    "qualificados": 12,
+    "agendados": 8,
+    "cpl": 35.19,
     "contas": [
      {
-      "conta": "[C.A.] Própria Italíne Mobile Prime - 01",
+      "conta": "Mobile Prime",
       "gasto": 2885.42,
-      "leads": 81.0,
-      "gasto_form": 2885.42,
-      "cpl": 35.62,
+      "leads": 82,
+      "qualificados": 12,
+      "agendados": 8,
+      "cpl": 35.19,
       "dentro": true
      }
     ],
-    "cpl": 35.62
+    "sem_dados": []
    }
   }
  }

@@ -89,12 +89,12 @@ clientes/
 scripts/
   lint_copy.py           verificação determinística das regras
   planilha/              Apps Script que grava a copy na Criativos Turbo7
-  contrato/              soma do Stract por gestor para o contrato de resultados
+  contrato/              soma do Painel Geral Consolidado por gestor para o contrato
   tests/                 36 do linter + 16 da porta JS + 14 do Apps Script
 docs/
   painel-artifact.html   cópia versionada do painel publicado como Artifact
   contrato-resultados.html  painel do contrato de resultados por função (Q4 2026)
-  contrato-dados.json    Meta Ads por gestor e mês, gerado do Stract para o painel
+  contrato-dados.json    mídia e leads por gestor e mês, gerado do Painel Geral Consolidado
   gravar-no-drive.md     o que dá e o que não dá para escrever no Google
 ```
 
@@ -116,9 +116,9 @@ node scripts/tests/test_lint_painel.mjs
 # testes do Apps Script que grava na planilha (geração de ID do criativo)
 node scripts/tests/test_gravar_copy.mjs
 
-# contrato de resultados: Stract exportado em CSV → docs/contrato-dados.json
-python3 scripts/contrato/meta_stract.py <stract.csv>
-python3 scripts/tests/test_meta_stract.py
+# contrato de resultados: Painel Geral Consolidado (.xlsx) → docs/contrato-dados.json
+python3 scripts/contrato/painel_geral.py <painel.xlsx>
+python3 scripts/tests/test_painel_geral.py
 ```
 
 ## Convenções

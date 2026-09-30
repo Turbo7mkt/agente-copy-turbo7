@@ -322,7 +322,7 @@ const ROTINAS = {
       ["Fechamento", "Flags ao CS no Relatório diário; cliente em risco marcado no Discord na hora."],
     ],
     regras: [
-      "Lead = conversa no WhatsApp ou lead de formulário. CPL meta de R$ 40 em todas as contas.",
+      "Lead = pessoa única no CRM, por formulário ou WhatsApp. CPL meta de R$ 40 em todas as contas.",
       "Meta de leads do cliente = investimento planejado ÷ 40.",
       "Crédito não pago 1 dia após o aviso vira flag financeira ao CS.",
       "Banco de roteiros e copys do mês seguinte vai ao dono 2 dias antes do Meet.",
@@ -412,7 +412,7 @@ const ROTINAS = {
    ============================================================ */
 const CHAVE = "contrato-t7-q4-2026-v2";
 const MES_ISO = { out: "2026-10", nov: "2026-11", dez: "2026-12" };
-let AUTO = null; // docs/contrato-dados.json, gerado por scripts/contrato/meta_stract.py
+let AUTO = null; // docs/contrato-dados.json, gerado por scripts/contrato/painel_geral.py
 function exemplo() {
   const s = { exemplo: true, aba: "equipe", modo: {}, sub: {}, pessoaSel: {}, pessoas: {}, dados: {}, sim: {}, checks: {},
     empresa: { satBase: 68, meses: { out: { fat: 128500, canc: 3.8, sat: 71 }, nov: { fat: 141000, canc: 6.1, sat: 73 }, dez: {} } } };
@@ -427,7 +427,7 @@ function exemplo() {
         if (ind.tipo === "gradual" && !ind.derivado) bases[ind.id] = baseSugerida(ind);
       });
       if (f.id === "gestor") {
-        delete bases.leadsPct; // a base vem de setembro no Stract
+        delete bases.leadsPct; // a base vem de setembro no Painel Geral
         MESES.slice(0, 2).forEach((m, i) => { meses[m.id] = { copys: +(2 + r[i]).toFixed(1) }; });
       } else {
         MESES.slice(0, 2).forEach((m, i) => {
@@ -513,7 +513,7 @@ function mesDe(f, pid, mes) {
   if (!temValor(m.plan) && temValor(m.gasto)) { m.plan = m.gasto; m.planEstimado = true; }
   return m;
 }
-// base do % da meta de leads: setembro no Stract, com o investido no lugar do planejado
+// base do % da meta de leads: setembro no Painel Geral, com o investido no lugar do planejado
 function baseDe(f, pid, ind) {
   const b = S.dados[pid].bases[ind.id];
   if (temValor(b) || f.id !== "gestor" || ind.id !== "leadsPct") return b;
@@ -744,14 +744,14 @@ function tabelaLancar(f, pid) {
       midia += `<tr><td><div class="ind-nome">${esc(e.nome)}</div></td><td class="d">${setVal}</td>
         ${MESES.map(m => {
           const a = autoGestor(d.nome, MES_ISO[m.id]);
-          if (a && (e.id === "gasto" || e.id === "leads")) return `<td class="d num">${fmt(a[e.id], e.un)}<span class="tag">Stract</span></td>`;
+          if (a && (e.id === "gasto" || e.id === "leads")) return `<td class="d num">${fmt(a[e.id], e.un)}<span class="tag">Painel Geral</span></td>`;
           return `<td class="d">${inp(`in-${pid}-${e.id}-${m.id}`, d.meses[m.id]?.[e.id], `data-in="${e.id}" data-mes="${m.id}" aria-label="${esc(e.nome)} ${m.nome}"`)}</td>`;
         }).join("")}</tr>`;
     });
   }
   indDe(f).forEach(ind => {
     const baseAuto = temValor(d.bases[ind.id]) ? null : baseDe(f, pid, ind);
-    const base = ind.tipo === "corte" ? `<span class="tag corte">corte</span>` : inp(`base-${pid}-${ind.id}`, d.bases[ind.id], `data-base="${ind.id}" aria-label="Base ${esc(ind.nome)}"${temValor(baseAuto) ? ` placeholder="${nf1.format(baseAuto)}" title="Setembro no Stract"` : ""}`);
+    const base = ind.tipo === "corte" ? `<span class="tag corte">corte</span>` : inp(`base-${pid}-${ind.id}`, d.bases[ind.id], `data-base="${ind.id}" aria-label="Base ${esc(ind.nome)}"${temValor(baseAuto) ? ` placeholder="${nf1.format(baseAuto)}" title="Setembro no Painel Geral"` : ""}`);
     const cels = MESES.map(m => {
       if (ind.derivado) return `<td class="d num" id="der-${ind.id}-${m.id}">${fmt(valorPessoa(f, pid, ind, m.id), ind.un)}</td>`;
       return `<td class="d">${inp(`v-${pid}-${ind.id}-${m.id}`, d.meses[m.id]?.[ind.id], `data-ind="${ind.id}" data-mes="${m.id}" aria-label="${esc(ind.nome)} ${m.nome}"`)}</td>`;
@@ -771,26 +771,27 @@ function tabelaLancar(f, pid) {
       <div class="rolagem"><table class="ct">${head}<tbody>${emp}</tbody></table></div></section>`;
 }
 
-/* ---------- Contas do gestor (Stract) ---------- */
+/* ---------- Contas do gestor (Painel Geral Consolidado) ---------- */
 function blocoContas(nome) {
-  if (!AUTO) return `<section class="bloco"><div class="bloco-cab"><h2>Contas da carteira</h2></div><p class="texto">Os dados do Meta Ads não carregaram. Gasto e leads podem ser lançados à mão na tabela acima.</p></section>`;
-  const isos = Object.keys(AUTO.meses).sort().reverse();
-  const iso = isos.find(i => AUTO.meses[i][nome]);
-  if (!iso) return `<section class="bloco"><div class="bloco-cab"><h2>Contas da carteira</h2></div><p class="texto">Nenhuma conta do Meta Ads está ligada a ${esc(nome)} em scripts/contrato/meta_stract.py.</p></section>`;
+  const vazio = txt => `<section class="bloco"><div class="bloco-cab"><h2>Contas da carteira</h2></div><p class="texto">${txt}</p></section>`;
+  if (!AUTO) return vazio("Os dados de mídia não carregaram. Investimento e leads podem ser lançados à mão no bloco acima.");
+  const iso = Object.keys(AUTO.meses).sort().reverse().find(i => AUTO.meses[i][nome]);
+  if (!iso) return vazio(`Nenhum cliente está ligado a ${esc(nome)} na carteira do Painel Geral.`);
   const g = AUTO.meses[iso][nome];
   const nomeMes = new Date(iso + "-15T12:00:00").toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  const n = v => new Intl.NumberFormat("pt-BR").format(v);
   const linhas = g.contas.map(c => {
     const est = c.cpl === null ? '<span class="estado erro">sem lead</span>' : c.dentro ? '<span class="estado ok">até R$ 40</span>' : '<span class="estado alerta">acima</span>';
-    const form = c.gasto_form > 0 ? `<span class="tag corte" title="Gasto em campanhas de formulário: os leads delas não estão no Stract">form ${brl.format(c.gasto_form)}</span>` : "";
-    return `<tr><td><div class="ind-nome">${esc(c.conta)}</div>${form}</td><td class="d num">${fmt(c.gasto, "R$")}</td><td class="d num">${nf1.format(c.leads).replace(",0", "")}</td><td class="d num">${c.cpl === null ? "—" : brl2.format(c.cpl)}</td><td class="d">${est}</td></tr>`;
+    return `<tr><td><div class="ind-nome">${esc(c.conta)}</div></td><td class="d num">${fmt(c.gasto, "R$")}</td><td class="d num">${n(c.leads)}</td><td class="d num">${n(c.qualificados ?? 0)}</td><td class="d num">${n(c.agendados ?? 0)}</td><td class="d num">${c.cpl === null ? "—" : brl2.format(c.cpl)}</td><td class="d">${est}</td></tr>`;
   }).join("");
   const dentro = g.contas.filter(c => c.dentro).length;
   const atual = new Date(AUTO.atualizado_em).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-  const selo = `Stract · leitura de ${esc(atual)}`;
-  return `<section class="bloco"><div class="bloco-cab"><h2>Contas da carteira · ${esc(nomeMes)}</h2><span class="peso-total">${selo}</span></div>
-    ${!AUTO.leads_de_formulario_na_fonte && g.gasto_form > 0 ? `<div class="aviso" style="border-radius:0">Lead conta conversa no WhatsApp e formulário, mas o Stract só traz conversas. ${brl.format(g.gasto_form)} foram para campanhas de formulário sem os leads delas: o CPL real dessas contas é menor que o mostrado.</div>` : ""}
-    <div class="rolagem"><table class="ct" style="min-width:560px"><thead><tr><th>Conta</th><th class="d">Investido</th><th class="d">Leads</th><th class="d">CPL</th><th class="d">Meta R$ 40</th></tr></thead>
-    <tbody>${linhas}<tr><td><b>Carteira</b> · ${dentro} de ${g.contas.length} contas até R$ 40</td><td class="d num"><b>${fmt(g.gasto, "R$")}</b></td><td class="d num"><b>${nf1.format(g.leads).replace(",0", "")}</b></td><td class="d num"><b>${g.cpl === null ? "—" : brl2.format(g.cpl)}</b></td><td class="d">${g.cpl !== null && g.cpl <= 40 ? '<span class="estado ok">dentro</span>' : '<span class="estado alerta">acima</span>'}</td></tr></tbody></table></div></section>`;
+  const semDados = (g.sem_dados || []).length ? `<div class="aviso" style="border-radius:0"><span><strong>Sem dados no Painel Geral:</strong> ${g.sem_dados.map(esc).join(", ")}. Esses clientes ainda não entram na soma da carteira.</span></div>` : "";
+  return `<section class="bloco"><div class="bloco-cab"><h2>Contas da carteira · ${esc(nomeMes)}</h2><span class="peso-total">Painel Geral · leitura de ${esc(atual)}</span></div>
+    ${semDados}
+    <div class="rolagem"><table class="ct" style="min-width:680px"><thead><tr><th>Cliente</th><th class="d">Investido</th><th class="d">Leads</th><th class="d">Qualif.</th><th class="d">Agend.</th><th class="d">CPL</th><th class="d">Meta R$ 40</th></tr></thead>
+    <tbody>${linhas}<tr><td><b>Carteira</b> · ${dentro} de ${g.contas.length} clientes até R$ 40</td><td class="d num"><b>${fmt(g.gasto, "R$")}</b></td><td class="d num"><b>${n(g.leads)}</b></td><td class="d num"><b>${n(g.qualificados ?? 0)}</b></td><td class="d num"><b>${n(g.agendados ?? 0)}</b></td><td class="d num"><b>${g.cpl === null ? "—" : brl2.format(g.cpl)}</b></td><td class="d">${g.cpl !== null && g.cpl <= 40 ? '<span class="estado ok">dentro</span>' : '<span class="estado alerta">acima</span>'}</td></tr></tbody></table></div>
+    <p class="ind-fonte" style="padding:10px 16px">Lead é a pessoa única que entrou no CRM, por formulário ou WhatsApp, contada no mês do primeiro registro.</p></section>`;
 }
 
 /* ---------- Simulação ---------- */
@@ -956,7 +957,7 @@ function telaRegras() {
           <table class="ct" style="min-width:0"><thead><tr><th>Nota</th><th class="d">Valor</th></tr></thead><tbody>${tab}</tbody></table></section>
         <section class="bloco"><div class="bloco-cab"><h2>Ainda pendente</h2></div><ul class="lista">
           <li>Links das planilhas de verba por cliente e do faturamento, para os números entrarem sozinhos.</li>
-          <li>Leads de formulário: a extração do Stract só traz conversas do WhatsApp. Campanhas de formulário somaram R$ 50,3 mil em setembro sem os leads delas.</li>
+          <li>12 dos 23 clientes ainda não aparecem no Painel Geral Consolidado, então ficam fora da soma da carteira do gestor.</li>
           <li>Design: os 6 por dia são criativos no total ou só vídeos.</li>
           <li>Rotina do gestor de tráfego.</li>
         </ul></section>
