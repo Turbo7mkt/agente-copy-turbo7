@@ -218,7 +218,8 @@ def agregar(linhas_stract, linhas_crm):
     for c in clientes_com_dados:
         semanas = [{"semana": p, **fechar(grupos[("semana", p, c)])}
                    for p in sorted({p for (t, p, cc) in grupos if t == "semana" and cc == c})]
-        dias = [{"dia": p, "gasto": round(grupos[("dia", p, c)]["gasto"], 2), "leads": grupos[("dia", p, c)]["leads"]}
+        dias = [{"dia": p, "gasto": round(grupos[("dia", p, c)]["gasto"], 2), "leads": grupos[("dia", p, c)]["leads"],
+                 "leads_cpl": grupos[("dia", p, c)]["leads_cpl"], "qualificados": grupos[("dia", p, c)]["qualificados"]}
                 for p in sorted({p for (t, p, cc) in grupos if t == "dia" and cc == c})
                 if date.fromisoformat(p) > hoje - timedelta(days=DIAS_SERIE)]
         campanhas = defaultdict(list)

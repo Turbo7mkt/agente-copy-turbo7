@@ -288,12 +288,11 @@ const FUNCOES = [
   },
   {
     id: "social", nome: "Social Media", pessoas: ["Social Media"],
-    resumo: "Narração no prazo para o design editar, orgânico aprovado de uma vez e captação feita.",
+    resumo: "Duas narrações por dia para o design editar e orgânico aprovado e publicado no prazo.",
     ind: [
-      { id: "narr", nome: "% de narrações gravadas até D+1", peso: 0.9, tipo: "gradual", dir: "max", meta: 95, un: "%", fonte: "Planilha de Criativos" },
-      { id: "cal", nome: "% de calendários aprovados até o dia 25", peso: 0.4, tipo: "gradual", dir: "max", meta: 100, un: "%", fonte: "Calendários do orgânico" },
-      { id: "posts", nome: "% de posts publicados no prazo", peso: 0.4, tipo: "gradual", dir: "max", meta: 95, un: "%", fonte: "Calendários do orgânico" },
-      { id: "capt", nome: "% de captações realizadas", peso: 0.3, tipo: "gradual", dir: "max", meta: 100, un: "%", fonte: "Controle de clientes" },
+      { id: "narr", nome: "Narrações gravadas por dia útil", peso: 1, tipo: "gradual", dir: "max", meta: 2, un: "n", fonte: "Planilha de Criativos · status Gravado" },
+      { id: "cal", nome: "% de calendários aprovados até o dia 25", peso: 0.5, tipo: "gradual", dir: "max", meta: 100, un: "%", fonte: "Calendários do orgânico" },
+      { id: "posts", nome: "% de posts publicados no prazo", peso: 0.5, tipo: "gradual", dir: "max", meta: 95, un: "%", fonte: "Calendários do orgânico" },
     ],
   },
   {
@@ -380,11 +379,11 @@ const ROTINAS = {
     ],
     regras: [
       "Roteiro sem aprovação do dono não é gravado.",
-      "Narração gravada até D+1 para o designer editar no mesmo dia.",
+      "Meta de 2 narrações gravadas por dia útil, para o designer editar no mesmo dia.",
       "Calendário do mês seguinte montado até o dia 20 e aprovado até o dia 25.",
       "Narração urgente fora do bloco só para cliente do Box com 2 ou menos criativos verdes.",
     ],
-    sexta: ["Narrações gravadas até D+1", "Calendários aprovados até o dia 25", "Posts no prazo", "Captações no mês"],
+    sexta: ["Narrações gravadas por dia (meta 2)", "Calendários aprovados até o dia 25", "Posts no prazo"],
   },
   design: {
     agenda: [
@@ -414,7 +413,7 @@ const CHAVE = "contrato-t7-q4-2026-v2";
 const MES_ISO = { out: "2026-10", nov: "2026-11", dez: "2026-12" };
 let AUTO = null; // docs/contrato-dados.json, gerado por scripts/contrato/painel_geral.py
 function exemplo() {
-  const s = { exemplo: true, aba: "equipe", modo: {}, sub: {}, pessoaSel: {}, pessoas: {}, dados: {}, sim: {}, checks: {},
+  const s = { exemplo: true, aba: "radar", modo: {}, sub: {}, pessoaSel: {}, pessoas: {}, dados: {}, sim: {}, checks: {},
     empresa: { satBase: 68, meses: { out: { fat: 128500, canc: 3.8, sat: 71 }, nov: { fat: 141000, canc: 6.1, sat: 73 }, dez: {} } } };
   const ritmo = [[0.9, 0.95], [0.6, 0.8], [0.75, 0.55], [1, 0.85]];
   let k = 0;
@@ -595,7 +594,7 @@ const lerNum = el => el.value === "" ? null : Number(String(el.value).replace(",
 /* ============================================================
    Abas
    ============================================================ */
-const ABAS = [{ id: "equipe", nome: "Equipe" }, ...FUNCOES.map(f => ({ id: f.id, nome: f.nome })), { id: "regras", nome: "Regras" }];
+const ABAS = [{ id: "radar", nome: "Radar" }, { id: "equipe", nome: "Equipe" }, ...FUNCOES.map(f => ({ id: f.id, nome: f.nome })), { id: "regras", nome: "Regras" }];
 function desenharAbas() {
   document.getElementById("abas").innerHTML = ABAS.map(a =>
     `<button class="aba" role="tab" id="aba-${a.id}" aria-selected="${S.aba === a.id}" data-aba="${a.id}">${esc(a.nome)}</button>`).join("");
@@ -614,10 +613,120 @@ function avisoExemplo() {
 function desenhar() {
   desenharAbas();
   const palco = document.getElementById("palco");
-  if (S.aba === "equipe") palco.innerHTML = avisoExemplo() + telaEquipe();
+  if (S.aba === "radar") palco.innerHTML = telaRadar();
+  else if (S.aba === "equipe") palco.innerHTML = avisoExemplo() + telaEquipe();
   else if (S.aba === "regras") palco.innerHTML = telaRegras();
   else palco.innerHTML = avisoExemplo() + telaFuncao(FUNCOES.find(f => f.id === S.aba));
   if (FUNCOES.some(f => f.id === S.aba)) atualizarPlacar();
+}
+
+/* ---------- Radar: o que está funcionando ----------
+   Últimos 7 dias contra os 7 anteriores, por cliente e por campanha.
+   Regras de status (mudou a régua? mude aqui):
+     parado          → sem investimento nos últimos 7 dias
+     não funcionando → investiu e não teve lead, ou CPL acima de R$ 50
+     atenção         → CPL entre R$ 40 e R$ 50
+     funcionando     → CPL até R$ 40
+   Queda de leads acima de 30% contra a semana anterior (com 10+ leads antes)
+   rebaixa um nível. */
+const RADAR = { cplMeta: 40, cplLimite: 50, queda: 30, minLeadsQueda: 10, dias: 7 };
+const STATUS = {
+  ok: { nome: "Funcionando", classe: "ok", ordem: 3 },
+  atencao: { nome: "Atenção", classe: "alerta", ordem: 1 },
+  ruim: { nome: "Não funcionando", classe: "erro", ordem: 0 },
+  parado: { nome: "Parado", classe: "", ordem: 2 },
+};
+function janela(dias, fim, n) {
+  const ini = new Date(fim + "T12:00:00"); ini.setDate(ini.getDate() - n + 1);
+  const iniIso = ini.toISOString().slice(0, 10);
+  const t = { gasto: 0, leads: 0, leads_cpl: 0, qualificados: 0 };
+  dias.filter(d => d.dia >= iniIso && d.dia <= fim).forEach(d => { t.gasto += d.gasto || 0; t.leads += d.leads || 0; t.leads_cpl += d.leads_cpl ?? d.leads ?? 0; t.qualificados += d.qualificados || 0; });
+  t.cpl = t.leads_cpl ? t.gasto / t.leads_cpl : null;
+  return t;
+}
+function statusDe(atual, antes) {
+  let st;
+  if (atual.gasto <= 0) return { st: "parado", motivo: "sem investimento na semana" };
+  if (!atual.leads_cpl) { st = "ruim"; }
+  else if (atual.cpl > RADAR.cplLimite) st = "ruim";
+  else if (atual.cpl > RADAR.cplMeta) st = "atencao";
+  else st = "ok";
+  const variacao = antes.leads ? (atual.leads - antes.leads) / antes.leads * 100 : null;
+  let motivo = !atual.leads_cpl ? "investiu e não teve lead" : `CPL ${brl2.format(atual.cpl)}`;
+  if (variacao !== null && antes.leads >= RADAR.minLeadsQueda && variacao < -RADAR.queda) {
+    st = st === "ok" ? "atencao" : "ruim";
+    motivo += ` · leads caíram ${Math.round(-variacao)}%`;
+  }
+  return { st, motivo, variacao };
+}
+function seta(v) {
+  if (v === null || v === undefined || !isFinite(v)) return '<span class="ind-fonte">—</span>';
+  const s = v > 5 ? "▲" : v < -5 ? "▼" : "▬";
+  const cor = v > 5 ? "var(--ok)" : v < -5 ? "var(--erro)" : "var(--ink-fraco)";
+  return `<span class="num" style="color:${cor}">${s} ${Math.abs(Math.round(v))}%</span>`;
+}
+function pill(st) { const x = STATUS[st]; return `<span class="estado ${x.classe}"${x.classe ? "" : ' style="background:var(--surface-alt);color:var(--ink-fraco)"'}>${x.nome}</span>`; }
+function telaRadar() {
+  if (!AUTO || !AUTO.clientes) return `<div class="cab-funcao"><div><h1>Radar</h1><p class="sub">Os dados do Painel Geral não carregaram.</p></div></div>`;
+  const fim = AUTO.dados_ate;
+  const iniAtual = new Date(fim + "T12:00:00"); iniAtual.setDate(iniAtual.getDate() - RADAR.dias);
+  const fimAntes = iniAtual.toISOString().slice(0, 10);
+  const iniJanela = new Date(fim + "T12:00:00"); iniJanela.setDate(iniJanela.getDate() - RADAR.dias + 1);
+  const linhas = Object.entries(AUTO.clientes).map(([nome, c]) => {
+    const atual = janela(c.dias || [], fim, RADAR.dias), antes = janela(c.dias || [], fimAntes, RADAR.dias);
+    return { nome, gestor: c.gestor, atual, antes, ...statusDe(atual, antes) };
+  }).sort((a, b) => STATUS[a.st].ordem - STATUS[b.st].ordem || b.atual.gasto - a.atual.gasto);
+  const cont = k => linhas.filter(l => l.st === k).length;
+  const tot = linhas.reduce((t, l) => { t.gasto += l.atual.gasto; t.leads += l.atual.leads; t.lc += l.atual.leads_cpl; t.ga += l.antes.gasto; t.la += l.antes.leads; t.lca += l.antes.leads_cpl; return t; }, { gasto: 0, leads: 0, lc: 0, ga: 0, la: 0, lca: 0 });
+  const cplT = tot.lc ? tot.gasto / tot.lc : null, cplA = tot.lca ? tot.ga / tot.lca : null;
+
+  // campanhas do mês corrente
+  const mes = fim.slice(0, 7);
+  const camps = [];
+  Object.entries(AUTO.clientes).forEach(([nome, c]) => (c.campanhas?.[mes] || []).forEach(k => camps.push({ ...k, cliente: nome })));
+  const boas = camps.filter(k => k.cpl !== null && k.cpl <= RADAR.cplMeta && k.leads >= 5).sort((a, b) => a.cpl - b.cpl).slice(0, 8);
+  const ruins = camps.filter(k => k.gasto >= 300 && k.leads > 0 && k.cpl > 60).sort((a, b) => b.gasto - a.gasto).slice(0, 8);
+  const semAtrib = camps.filter(k => k.gasto >= 300 && !k.leads);
+  const tabCamp = (lista, vaziaTxt) => lista.length ? `<div class="rolagem"><table class="ct" style="min-width:520px"><thead><tr><th>Campanha</th><th>Cliente</th><th class="d">Investido</th><th class="d">Leads</th><th class="d">CPL</th></tr></thead><tbody>${lista.map(k => `<tr><td>${esc(k.campanha)}</td><td>${esc(k.cliente)}</td><td class="d num">${fmt(k.gasto, "R$")}</td><td class="d num">${nInt(k.leads)}</td><td class="d num">${reais(k.cpl)}</td></tr>`).join("")}</tbody></table></div>` : `<p class="texto">${vaziaTxt}</p>`;
+
+  // contratos em risco (nota do período abaixo de 6)
+  const risco = [];
+  FUNCOES.forEach(f => (S.pessoas[f.id] || []).forEach(pid => { const r = resultado(f, pid); if (r.nota !== null && r.nota < 6) risco.push({ nome: S.dados[pid].nome, funcao: f.nome, nota: r.nota }); }));
+
+  // saúde dos dados
+  const semDados = [...new Set(Object.values(AUTO.meses[mes] || {}).flatMap(g => g.sem_dados || []))];
+  const semCasamento = camps.filter(k => !k.gasto && k.leads).length;
+  const atual = new Date(AUTO.atualizado_em);
+  const horas = (Date.now() - atual) / 36e5;
+  const f2 = d => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+
+  return `
+    <div class="cab-funcao"><div><h1>Radar</h1>
+      <p class="sub">O que está funcionando na mídia: ${f2(iniJanela.toISOString().slice(0, 10))} a ${f2(fim)} contra os 7 dias anteriores. Régua: CPL de R$ 40.</p></div>
+      <span class="estado ${horas > 2 ? "alerta" : "ok"}">leitura de ${atual.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span></div>
+    <div class="kpis">
+      <div class="kpi"><span class="rotulo">Funcionando</span><span class="v" style="color:var(--ok)">${cont("ok")}</span><span class="s">clientes com CPL até R$ 40</span></div>
+      <div class="kpi"><span class="rotulo">Atenção</span><span class="v" style="color:var(--alerta)">${cont("atencao")}</span><span class="s">CPL de R$ 40 a R$ 50 ou leads caindo</span></div>
+      <div class="kpi"><span class="rotulo">Não funcionando</span><span class="v" style="color:var(--erro)">${cont("ruim")}</span><span class="s">CPL acima de R$ 50 ou sem lead</span></div>
+      <div class="kpi"><span class="rotulo">Carteira na semana</span><span class="v">${reais(cplT)}</span><span class="s">${fmt(tot.gasto, "R$")} · ${nInt(tot.leads)} leads · ${seta(tot.la ? (tot.leads - tot.la) / tot.la * 100 : null)} leads</span></div>
+    </div>
+    <section class="bloco"><div class="bloco-cab"><h2>Clientes · semana contra semana anterior</h2><span class="peso-total">pior primeiro</span></div>
+      <div class="rolagem"><table class="ct" style="min-width:820px"><thead><tr><th>Cliente</th><th>Status</th><th class="d">Investido</th><th class="d">Leads</th><th class="d">vs. anterior</th><th class="d">Qualif.</th><th class="d">CPL</th><th class="d">CPL antes</th><th>Por quê</th></tr></thead>
+      <tbody>${linhas.map(l => `<tr><td><div class="ind-nome">${esc(l.nome)}</div><div class="ind-fonte">${esc(l.gestor)}</div></td><td>${pill(l.st)}</td><td class="d num">${fmt(l.atual.gasto, "R$")}</td><td class="d num">${nInt(l.atual.leads)}</td><td class="d">${seta(l.variacao)}</td><td class="d num">${nInt(l.atual.qualificados)}</td><td class="d num">${reais(l.atual.cpl)}</td><td class="d num ind-fonte">${reais(l.antes.cpl)}</td><td class="ind-fonte">${esc(l.motivo)}</td></tr>`).join("")}</tbody></table></div></section>
+    <div class="grade" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+      <section class="bloco"><div class="bloco-cab"><h2>Campanhas que funcionam · ${esc(nomeMesIso(mes))}</h2><span class="peso-total">CPL até R$ 40 e 5+ leads</span></div>${tabCamp(boas, "Nenhuma campanha dentro da régua ainda no mês.")}</section>
+      <section class="bloco"><div class="bloco-cab"><h2>Campanhas que não funcionam</h2><span class="peso-total">R$ 300+ e CPL acima de R$ 60</span></div>${tabCamp(ruins, "Nenhuma campanha com gasto alto e CPL ruim no mês.")}
+        ${semAtrib.length ? `<p class="ind-fonte" style="padding:8px 16px">${semAtrib.length} campanhas investiram ${fmt(semAtrib.reduce((a, k) => a + k.gasto, 0), "R$")} sem lead atribuído pelo nome. Isso costuma ser nome diferente entre Meta e CRM, não campanha sem resultado: ${semAtrib.slice(0, 4).map(k => esc(k.campanha)).join("; ")}${semAtrib.length > 4 ? "…" : ""}.</p>` : ""}</section>
+    </div>
+    <div class="grade" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+      <section class="bloco"><div class="bloco-cab"><h2>Contratos abaixo de 6</h2><span class="peso-total">${esc(periodo().nome)}</span></div>
+        ${risco.length ? `<ul class="lista">${risco.sort((a, b) => a.nota - b.nota).map(r => `<li><b>${esc(r.nome)}</b> · ${esc(r.funcao)} · nota ${nf1.format(r.nota)}</li>`).join("")}</ul>` : `<p class="texto">Todos os contratos lançados estão em 6 ou mais.</p>`}</section>
+      <section class="bloco"><div class="bloco-cab"><h2>Saúde dos dados</h2></div><ul class="lista">
+        <li>${horas > 2 ? `<b>Leitura de ${Math.round(horas)} h atrás.</b> A atualização de hora em hora só roda com a rotina ligada e o Google Drive conectado.` : "Leitura recente."}</li>
+        <li>${semDados.length ? `<b>${semDados.length} clientes da carteira fora do Painel Geral:</b> ${semDados.map(esc).join(", ")}.` : "Todos os clientes da carteira estão no Painel Geral."}</li>
+        <li>${semCasamento || semAtrib.length ? `<b>Nomes de campanha que não batem entre CRM e Meta:</b> ${semCasamento} com lead e sem investido, ${semAtrib.length} com investido e sem lead. Padronizar o nome resolve o CPL por campanha.` : "Campanhas do CRM e do Meta casando."}</li>
+      </ul></section>
+    </div>`;
 }
 
 /* ---------- Equipe ---------- */
