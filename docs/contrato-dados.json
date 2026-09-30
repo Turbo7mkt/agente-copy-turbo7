@@ -1,0 +1,220 @@
+{
+ "atualizado_em": "2026-09-30T15:42+00:00",
+ "dados_ate": "2026-09-30",
+ "fonte": "Google Drive · \"Stract - Clientes Visão Geral\" (19UuY5so8bPyOPYvoMMMeh58Z7Wnr4WktvXhZJy_39hY)",
+ "regra_lead": "conversa iniciada no WhatsApp ou lead de formulário",
+ "leads_de_formulario_na_fonte": false,
+ "cpl_meta": 40.0,
+ "meses": {
+  "2026-09": {
+   "Micheli": {
+    "gasto": 91093.26,
+    "leads": 4190.0,
+    "gasto_form": 28087.45,
+    "contas": [
+     {
+      "conta": "DIANA PLANEJADOS NOVA",
+      "gasto": 33793.8,
+      "leads": 2121.0,
+      "gasto_form": 0.0,
+      "cpl": 15.93,
+      "dentro": true
+     },
+     {
+      "conta": "Diana Prime - T7 NOVA",
+      "gasto": 23998.93,
+      "leads": 1560.0,
+      "gasto_form": 2360.83,
+      "cpl": 15.38,
+      "dentro": true
+     },
+     {
+      "conta": "Camminare Italinea - T7",
+      "gasto": 8972.22,
+      "leads": 71.0,
+      "gasto_form": 8972.22,
+      "cpl": 126.37,
+      "dentro": false
+     },
+     {
+      "conta": "Casa Nova I TURBO 7 - NOVA",
+      "gasto": 3462.09,
+      "leads": 45.0,
+      "gasto_form": 3462.09,
+      "cpl": 76.94,
+      "dentro": false
+     },
+     {
+      "conta": "Fast T7",
+      "gasto": 2965.1,
+      "leads": 30.0,
+      "gasto_form": 2965.1,
+      "cpl": 98.84,
+      "dentro": false
+     },
+     {
+      "conta": "Mabruk Italínea - T7",
+      "gasto": 2648.38,
+      "leads": 137.0,
+      "gasto_form": 0.0,
+      "cpl": 19.33,
+      "dentro": true
+     },
+     {
+      "conta": "Tonol Planejados T7 NOVA",
+      "gasto": 2635.55,
+      "leads": 21.0,
+      "gasto_form": 2635.55,
+      "cpl": 125.5,
+      "dentro": false
+     },
+     {
+      "conta": "Maison Ettuali T7 NOVA",
+      "gasto": 2611.07,
+      "leads": 43.0,
+      "gasto_form": 0.0,
+      "cpl": 60.72,
+      "dentro": false
+     },
+     {
+      "conta": "Planeta Móveis Sp",
+      "gasto": 2373.79,
+      "leads": 58.0,
+      "gasto_form": 59.33,
+      "cpl": 40.93,
+      "dentro": false
+     },
+     {
+      "conta": "EFGE - T7",
+      "gasto": 2152.97,
+      "leads": 40.0,
+      "gasto_form": 2152.97,
+      "cpl": 53.82,
+      "dentro": false
+     },
+     {
+      "conta": "Decoralle - T7",
+      "gasto": 2028.17,
+      "leads": 34.0,
+      "gasto_form": 2028.17,
+      "cpl": 59.65,
+      "dentro": false
+     },
+     {
+      "conta": "Moinhos - Turbo 7",
+      "gasto": 1736.24,
+      "leads": 14.0,
+      "gasto_form": 1736.24,
+      "cpl": 124.02,
+      "dentro": false
+     },
+     {
+      "conta": "Turbo 7 - Higienópolis",
+      "gasto": 1714.95,
+      "leads": 16.0,
+      "gasto_form": 1714.95,
+      "cpl": 107.18,
+      "dentro": false
+     }
+    ],
+    "cpl": 21.74
+   },
+   "Tiago Vianna": {
+    "gasto": 20273.65,
+    "leads": 270.0,
+    "gasto_form": 19335.64,
+    "contas": [
+     {
+      "conta": "Atlantica Italínea [NOVA T7]",
+      "gasto": 7456.61,
+      "leads": 107.0,
+      "gasto_form": 7456.61,
+      "cpl": 69.69,
+      "dentro": false
+     },
+     {
+      "conta": "Pinheiro´s planejados 2",
+      "gasto": 1976.58,
+      "leads": 22.0,
+      "gasto_form": 1976.58,
+      "cpl": 89.84,
+      "dentro": false
+     },
+     {
+      "conta": "Formobili - T7",
+      "gasto": 1891.65,
+      "leads": 19.0,
+      "gasto_form": 1891.65,
+      "cpl": 99.56,
+      "dentro": false
+     },
+     {
+      "conta": "Casa e Cozinha - T7",
+      "gasto": 1834.8,
+      "leads": 38.0,
+      "gasto_form": 1834.8,
+      "cpl": 48.28,
+      "dentro": false
+     },
+     {
+      "conta": "PREEMIER-TURBO 7",
+      "gasto": 1831.98,
+      "leads": 24.0,
+      "gasto_form": 1831.98,
+      "cpl": 76.33,
+      "dentro": false
+     },
+     {
+      "conta": "Mhavi - T7",
+      "gasto": 1649.6,
+      "leads": 1.0,
+      "gasto_form": 1649.6,
+      "cpl": 1649.6,
+      "dentro": false
+     },
+     {
+      "conta": "CA01 - Mendes e Machado",
+      "gasto": 1507.95,
+      "leads": 27.0,
+      "gasto_form": 1507.95,
+      "cpl": 55.85,
+      "dentro": false
+     },
+     {
+      "conta": "Nova Design T7",
+      "gasto": 1186.47,
+      "leads": 24.0,
+      "gasto_form": 1186.47,
+      "cpl": 49.44,
+      "dentro": false
+     },
+     {
+      "conta": "CA - Italínea Móvel Max - Boleto/PIX",
+      "gasto": 938.01,
+      "leads": 8.0,
+      "gasto_form": 0.0,
+      "cpl": 117.25,
+      "dentro": false
+     }
+    ],
+    "cpl": 75.09
+   },
+   "Sem gestor": {
+    "gasto": 2885.42,
+    "leads": 81.0,
+    "gasto_form": 2885.42,
+    "contas": [
+     {
+      "conta": "[C.A.] Própria Italíne Mobile Prime - 01",
+      "gasto": 2885.42,
+      "leads": 81.0,
+      "gasto_form": 2885.42,
+      "cpl": 35.62,
+      "dentro": true
+     }
+    ],
+    "cpl": 35.62
+   }
+  }
+ }
+}

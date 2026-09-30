@@ -252,11 +252,11 @@ const EMPRESA = [
 
 const FUNCOES = [
   {
-    id: "gestor", nome: "Gestor de tráfego", pessoas: ["Davi", "Micheli", "Tiago Vianna"],
+    id: "gestor", nome: "Gestor de tráfego", pessoas: ["Micheli", "Tiago Vianna", "Davi"],
     resumo: "Volume de leads pelo investimento planejado, eficiência pelo investimento gasto e as copys da trilha de teste.",
     entradas: [
       { id: "copys", nome: "Copys entregues por dia útil", un: "n" },
-      { id: "plan", nome: "Investimento planejado da carteira", un: "R$" },
+      { id: "plan", nome: "Investimento planejado da carteira", un: "R$", ajuda: "vazio = usa o investido" },
       { id: "gasto", nome: "Investimento gasto da carteira", un: "R$" },
       { id: "leads", nome: "Leads gerados na carteira (conversas + formulários)", un: "n" },
     ],
@@ -408,7 +408,9 @@ const ROTINAS = {
 /* ============================================================
    Estado — salvo só neste navegador até as planilhas entrarem.
    ============================================================ */
-const CHAVE = "contrato-t7-q4-2026";
+const CHAVE = "contrato-t7-q4-2026-v2";
+const MES_ISO = { out: "2026-10", nov: "2026-11", dez: "2026-12" };
+let AUTO = null; // docs/contrato-dados.json, gerado por scripts/contrato/meta_stract.py
 function exemplo() {
   const s = { exemplo: true, aba: "equipe", modo: {}, sub: {}, pessoaSel: {}, pessoas: {}, dados: {}, sim: {}, checks: {},
     empresa: { baseSet: 112000, satBase: 68, meses: { out: { fat: 128500, canc: 3.8, sat: 71 }, nov: { fat: 141000, canc: 6.1, sat: 73 }, dez: {} } } };
@@ -423,11 +425,8 @@ function exemplo() {
         if (ind.tipo === "gradual" && !ind.derivado) bases[ind.id] = baseSugerida(ind);
       });
       if (f.id === "gestor") {
-        bases.leadsPct = 70;
-        MESES.slice(0, 2).forEach((m, i) => {
-          const plan = 36000 + k * 4000;
-          meses[m.id] = { copys: +(2 + r[i]).toFixed(1), plan, gasto: Math.round(plan * (0.9 + r[i] * 0.08)), leads: Math.round(plan / 40 * (0.72 + r[i] * 0.3)) };
-        });
+        delete bases.leadsPct; // a base vem de setembro no Stract
+        MESES.slice(0, 2).forEach((m, i) => { meses[m.id] = { copys: +(2 + r[i]).toFixed(1) }; });
       } else {
         MESES.slice(0, 2).forEach((m, i) => {
           f.ind.forEach(ind => {
@@ -469,7 +468,8 @@ function progresso(ind, v, base, metaMes) {
   const meta = metaMes ?? ind.meta;
   if (ind.tipo === "corte") return (ind.dir === "min" ? v <= meta : v >= meta) ? 1 : 0;
   if (!temValor(base) || !temValor(meta)) return null;
-  if (meta === base) return (ind.dir === "min" ? v <= meta : v >= meta) ? 1 : 0;
+  const jaNaMeta = ind.dir === "min" ? base <= meta : base >= meta;
+  if (jaNaMeta) return (ind.dir === "min" ? v <= meta : v >= meta) ? 1 : 0;
   return trava((v - base) / (meta - base));
 }
 function metaSat() { return temValor(S.empresa.satBase) ? Math.min(100, +(S.empresa.satBase * 1.1).toFixed(1)) : null; }
@@ -486,17 +486,33 @@ function progEmpresa(ind, mes, sim) {
   if (ind.id === "sat") return progresso(ind, v, S.empresa.satBase, metaSat());
   return progresso(ind, v, null);
 }
+function autoGestor(nome, iso) { return AUTO?.meses?.[iso]?.[nome] || null; }
+function mesDe(f, pid, mes) {
+  const m = { ...(S.dados[pid].meses[mes] || {}) };
+  if (f.id !== "gestor") return m;
+  const a = autoGestor(S.dados[pid].nome, MES_ISO[mes]);
+  if (a) { m.gasto = a.gasto; m.leads = a.leads; m.auto = true; }
+  if (!temValor(m.plan) && temValor(m.gasto)) { m.plan = m.gasto; m.planEstimado = true; }
+  return m;
+}
+// base do % da meta de leads: setembro no Stract, com o investido no lugar do planejado
+function baseDe(f, pid, ind) {
+  const b = S.dados[pid].bases[ind.id];
+  if (temValor(b) || f.id !== "gestor" || ind.id !== "leadsPct") return b;
+  const set = autoGestor(S.dados[pid].nome, "2026-09");
+  return set && set.gasto > 0 ? +(set.leads / (set.gasto / 40) * 100).toFixed(1) : null;
+}
 function valorPessoa(f, pid, ind, mes, sim) {
   if (sim) return sim[ind.id];
-  const m = S.dados[pid].meses[mes] || {};
+  const m = mesDe(f, pid, mes);
   return ind.derivado ? ind.derivado(m) : m[ind.id];
 }
 function progPessoa(f, pid, ind, mes, sim) {
-  return progresso(ind, valorPessoa(f, pid, ind, mes, sim), S.dados[pid].bases[ind.id]);
+  return progresso(ind, valorPessoa(f, pid, ind, mes, sim), baseDe(f, pid, ind));
 }
 function mesLancado(f, pid, mes) {
-  const m = S.dados[pid].meses[mes] || {};
-  return Object.values(m).some(temValor);
+  const m = mesDe(f, pid, mes);
+  return Object.entries(m).some(([k, v]) => k !== "auto" && k !== "planEstimado" && temValor(v));
 }
 // nota do mês = Σ peso × progresso; linha sem valor conta zero
 function notaMes(f, pid, mes, sim) {
@@ -684,13 +700,20 @@ function tabelaLancar(f, pid) {
   // função
   let fun = "";
   if (f.entradas) {
+    const set = autoGestor(d.nome, "2026-09");
     f.entradas.forEach(e => {
-      fun += `<tr class="entrada"><td><div class="ind-nome">${esc(e.nome)}</div></td><td></td><td></td><td class="d"><span class="ind-fonte">lançar</span></td>
-        ${MESES.map(m => `<td class="d">${inp(`in-${pid}-${e.id}-${m.id}`, d.meses[m.id]?.[e.id], `data-in="${e.id}" data-mes="${m.id}" aria-label="${esc(e.nome)} ${m.nome}"`)}</td>`).join("")}<td></td><td></td></tr>`;
+      const setVal = set && (e.id === "gasto" || e.id === "leads") ? `<span class="num ind-fonte" title="Setembro, base">${fmt(set[e.id], e.un)}</span>` : `<span class="ind-fonte">${e.ajuda ? esc(e.ajuda) : "lançar"}</span>`;
+      fun += `<tr class="entrada"><td><div class="ind-nome">${esc(e.nome)}</div></td><td></td><td></td><td class="d">${setVal}</td>
+        ${MESES.map(m => {
+          const a = autoGestor(d.nome, MES_ISO[m.id]);
+          if (a && (e.id === "gasto" || e.id === "leads")) return `<td class="d num">${fmt(a[e.id], e.un)}<span class="tag">Stract</span></td>`;
+          return `<td class="d">${inp(`in-${pid}-${e.id}-${m.id}`, d.meses[m.id]?.[e.id], `data-in="${e.id}" data-mes="${m.id}" aria-label="${esc(e.nome)} ${m.nome}"`)}</td>`;
+        }).join("")}<td></td><td></td></tr>`;
     });
   }
   f.ind.forEach(ind => {
-    const base = ind.tipo === "corte" ? `<span class="tag corte">corte</span>` : inp(`base-${pid}-${ind.id}`, d.bases[ind.id], `data-base="${ind.id}" aria-label="Base ${esc(ind.nome)}"`);
+    const baseAuto = temValor(d.bases[ind.id]) ? null : baseDe(f, pid, ind);
+    const base = ind.tipo === "corte" ? `<span class="tag corte">corte</span>` : inp(`base-${pid}-${ind.id}`, d.bases[ind.id], `data-base="${ind.id}" aria-label="Base ${esc(ind.nome)}"${temValor(baseAuto) ? ` placeholder="${nf1.format(baseAuto)}" title="Setembro no Stract"` : ""}`);
     const cels = MESES.map(m => {
       if (ind.derivado) return `<td class="d num" id="der-${ind.id}-${m.id}">${fmt(valorPessoa(f, pid, ind, m.id), ind.un)}</td>`;
       return `<td class="d">${inp(`v-${pid}-${ind.id}-${m.id}`, d.meses[m.id]?.[ind.id], `data-ind="${ind.id}" data-mes="${m.id}" aria-label="${esc(ind.nome)} ${m.nome}"`)}</td>`;
@@ -703,8 +726,30 @@ function tabelaLancar(f, pid) {
   return `
     <section class="bloco"><div class="bloco-cab"><h2>Meta individual · ${esc(f.nome)}</h2><span class="peso-total">peso 7</span></div>
       <div class="rolagem"><table class="ct">${head}<tbody>${fun}</tbody></table></div></section>
+    ${f.id === "gestor" ? blocoContas(d.nome) : ""}
     <section class="bloco"><div class="bloco-cab"><h2>Metas da empresa</h2><span class="peso-total">peso 3 · iguais para todos</span></div>
       <div class="rolagem"><table class="ct">${head}<tbody>${emp}</tbody></table></div></section>`;
+}
+
+/* ---------- Contas do gestor (Stract) ---------- */
+function blocoContas(nome) {
+  if (!AUTO) return `<section class="bloco"><div class="bloco-cab"><h2>Contas da carteira</h2></div><p class="texto">Os dados do Meta Ads não carregaram. Gasto e leads podem ser lançados à mão na tabela acima.</p></section>`;
+  const isos = Object.keys(AUTO.meses).sort().reverse();
+  const iso = isos.find(i => AUTO.meses[i][nome]);
+  if (!iso) return `<section class="bloco"><div class="bloco-cab"><h2>Contas da carteira</h2></div><p class="texto">Nenhuma conta do Meta Ads está ligada a ${esc(nome)} em scripts/contrato/meta_stract.py.</p></section>`;
+  const g = AUTO.meses[iso][nome];
+  const nomeMes = new Date(iso + "-15T12:00:00").toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  const linhas = g.contas.map(c => {
+    const est = c.cpl === null ? '<span class="estado erro">sem lead</span>' : c.dentro ? '<span class="estado ok">até R$ 40</span>' : '<span class="estado alerta">acima</span>';
+    const form = c.gasto_form > 0 ? `<span class="tag corte" title="Gasto em campanhas de formulário: os leads delas não estão no Stract">form ${brl.format(c.gasto_form)}</span>` : "";
+    return `<tr><td><div class="ind-nome">${esc(c.conta)}</div>${form}</td><td class="d num">${fmt(c.gasto, "R$")}</td><td class="d num">${nf1.format(c.leads).replace(",0", "")}</td><td class="d num">${c.cpl === null ? "—" : brl2.format(c.cpl)}</td><td class="d">${est}</td></tr>`;
+  }).join("");
+  const dentro = g.contas.filter(c => c.dentro).length;
+  const atual = new Date(AUTO.atualizado_em).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  return `<section class="bloco"><div class="bloco-cab"><h2>Contas da carteira · ${esc(nomeMes)}</h2><span class="peso-total">Stract · atualizado ${esc(atual)}</span></div>
+    ${!AUTO.leads_de_formulario_na_fonte && g.gasto_form > 0 ? `<div class="aviso" style="border-radius:0">Lead conta conversa no WhatsApp e formulário, mas o Stract só traz conversas. ${brl.format(g.gasto_form)} foram para campanhas de formulário sem os leads delas: o CPL real dessas contas é menor que o mostrado.</div>` : ""}
+    <div class="rolagem"><table class="ct" style="min-width:560px"><thead><tr><th>Conta</th><th class="d">Investido</th><th class="d">Leads</th><th class="d">CPL</th><th class="d">Meta R$ 40</th></tr></thead>
+    <tbody>${linhas}<tr><td><b>Carteira</b> · ${dentro} de ${g.contas.length} contas até R$ 40</td><td class="d num"><b>${fmt(g.gasto, "R$")}</b></td><td class="d num"><b>${nf1.format(g.leads).replace(",0", "")}</b></td><td class="d num"><b>${g.cpl === null ? "—" : brl2.format(g.cpl)}</b></td><td class="d">${g.cpl !== null && g.cpl <= 40 ? '<span class="estado ok">dentro</span>' : '<span class="estado alerta">acima</span>'}</td></tr></tbody></table></div></section>`;
 }
 
 /* ---------- Simulação ---------- */
@@ -726,7 +771,7 @@ function simDe(f, pid, tipo) {
   const media = fn => { const vs = MESES.map(m => fn(m.id)).filter(temValor); return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null; };
   const pessoa = {}, empresa = { fat: {} };
   f.ind.forEach(ind => {
-    const base = ind.tipo === "corte" ? (ind.dir === "min" ? ind.meta * 1.5 : 0) : d.bases[ind.id];
+    const base = ind.tipo === "corte" ? (ind.dir === "min" ? ind.meta * 1.5 : 0) : baseDe(f, pid, ind);
     if (tipo === "meta") pessoa[ind.id] = ind.meta;
     else if (tipo === "base") pessoa[ind.id] = temValor(base) ? base : faixaSlider(ind)[0];
     else { const v = media(mes => valorPessoa(f, pid, ind, mes)); pessoa[ind.id] = temValor(v) ? +v.toFixed(1) : (temValor(base) ? base : ind.meta); }
@@ -754,8 +799,8 @@ function tabelaSim(f, pid) {
   const head = `<thead><tr><th>Indicador</th><th class="d">Peso</th><th class="d">Meta</th><th>Valor simulado</th><th class="d">Progresso</th><th class="d">Pontos</th></tr></thead>`;
   let fun = "";
   f.ind.forEach(ind => {
-    const p = progresso(ind, sim.pessoa[ind.id], S.dados[pid].bases[ind.id]);
-    fun += `<tr><td><div class="ind-nome">${esc(ind.nome)}${ind.tipo === "corte" ? '<span class="tag corte">corte</span>' : ""}</div><div class="ind-fonte">${ind.tipo === "corte" ? "dentro do limite vale o peso inteiro" : "base " + fmt(S.dados[pid].bases[ind.id], ind.un)}</div></td>
+    const p = progresso(ind, sim.pessoa[ind.id], baseDe(f, pid, ind));
+    fun += `<tr><td><div class="ind-nome">${esc(ind.nome)}${ind.tipo === "corte" ? '<span class="tag corte">corte</span>' : ""}</div><div class="ind-fonte">${ind.tipo === "corte" ? "dentro do limite vale o peso inteiro" : "base " + fmt(baseDe(f, pid, ind), ind.un)}</div></td>
       <td class="d num">${nf1.format(ind.peso)}</td><td class="d num">${fmtMeta(ind)}</td>
       <td>${slider(`s-${ind.id}`, ind, sim.pessoa[ind.id], `data-s="${ind.id}"`)}</td>${celulaProg(p, ind.peso, "sind-" + ind.id)}</tr>`;
   });
@@ -967,7 +1012,7 @@ function atualizarLinhasSim(f, pid) {
   const sim = simAtual(f, pid);
   f.ind.forEach(ind => {
     document.getElementById(`s-${ind.id}-o`).textContent = fmt(sim.pessoa[ind.id], ind.un);
-    trocarProg("sind-" + ind.id, progresso(ind, sim.pessoa[ind.id], S.dados[pid].bases[ind.id]), ind.peso);
+    trocarProg("sind-" + ind.id, progresso(ind, sim.pessoa[ind.id], baseDe(f, pid, ind)), ind.peso);
   });
   MESES.forEach(m => {
     document.getElementById(`s-fat-${m.id}-o`).textContent = fmt(sim.empresa.fat[m.id], "R$");
@@ -981,4 +1026,8 @@ function atualizarLinhasSim(f, pid) {
 }
 
 desenhar();
+fetch("contrato-dados.json", { cache: "no-store" })
+  .then(r => r.ok ? r.json() : null)
+  .then(j => { if (j && j.meses) { AUTO = j; desenhar(); } })
+  .catch(() => {});
 </script>
