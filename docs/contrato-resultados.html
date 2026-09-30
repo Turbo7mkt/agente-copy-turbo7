@@ -486,8 +486,15 @@ function ativas(lista, removidas, total) {
   const soma = fica.reduce((a, i) => a + i.peso, 0) || 1;
   return fica.map(i => ({ ...i, peso: +(i.peso * total / soma).toFixed(4) }));
 }
-const indDe = f => ativas(f.ind, S.removidas?.[f.id], 2);
-const empDe = () => ativas(EMPRESA, S.removidas?.empresa, 8);
+/* Metas novas criadas pelo painel. Ficam no armazenamento compartilhado do
+   painel publicado (coleção "metas"), valem para todos que abrem o link e
+   sobrevivem às republicações. Sem esse armazenamento, ficam só neste navegador. */
+let METAS_NOVAS = [];      // do armazenamento compartilhado
+let DB = null, PODE_GRAVAR = null;
+const metasDe = bloco => [...METAS_NOVAS, ...(S.metasLocais || [])].filter(m => m.bloco === bloco);
+const listaBase = f => [...f.ind, ...metasDe(f.id)];
+const indDe = f => ativas(listaBase(f), S.removidas?.[f.id], 2);
+const empDe = () => ativas([...EMPRESA, ...metasDe("empresa")], S.removidas?.empresa, 8);
 const pesoEmp = id => empDe().find(i => i.id === id)?.peso ?? 0;
 
 /* ============================================================
@@ -517,7 +524,7 @@ function progEmpresa(ind, mes, sim) {
   const v = valorEmpresa(ind, mes, sim);
   if (ind.id === "fat") return progresso(ind, v, fatBase(mes), FAT_META[mes]);
   if (ind.id === "sat") return progresso(ind, v, S.empresa.satBase, metaSat());
-  return progresso(ind, v, null);
+  return progresso(ind, v, S.empresa.bases?.[ind.id] ?? null);
 }
 function autoGestor(nome, iso) { return AUTO?.meses?.[iso]?.[nome] || null; }
 const CPAG_LIMITE = 300;
@@ -847,21 +854,60 @@ function telaFuncao(f) {
             : `<span class="ind-fonte">Salvo neste navegador.</span>`}
         </div>
         ${removidasHtml(f)}
+        ${S.editando ? formNovaMeta(f) : ""}
         ${modo === "simular" ? tabelaSim(f, pid) : tabelaLancar(f, pid)}
       </div>
       <aside class="placar${modo === "simular" ? " sim" : ""}" id="placar" aria-live="polite"></aside>
     </div>`;
 }
 
+function formNovaMeta(f) {
+  const onde = DB ? (PODE_GRAVAR === false ? "Só o dono e os editores do painel criam metas; você pode ver." : "A meta nova vale para todos que abrem o link.") : "Sem o armazenamento compartilhado nesta visualização: a meta fica salva só neste navegador.";
+  if (DB && PODE_GRAVAR === false) return `<div class="aviso"><span>${onde}</span></div>`;
+  return `<section class="bloco"><div class="bloco-cab"><h2>Nova meta</h2><span class="peso-total">${esc(onde)}</span></div>
+    <form id="form-meta" class="texto" style="max-width:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end">
+      <label>Indicador<br><input class="nome-in" style="width:100%" id="nm-nome" required maxlength="90" placeholder="Ex.: % de leads respondidos em 5 min"></label>
+      <label>Bloco<br><select id="nm-bloco" class="nome-in" style="width:100%"><option value="${f.id}">${esc(f.nome)} (peso 2)</option><option value="empresa">Empresa, todos (peso 8)</option></select></label>
+      <label>Tipo<br><select id="nm-tipo" class="nome-in" style="width:100%"><option value="gradual">Gradual (da base até a meta)</option><option value="corte">Corte (bateu ou não)</option></select></label>
+      <label>Melhor quando<br><select id="nm-dir" class="nome-in" style="width:100%"><option value="max">maior</option><option value="min">menor</option></select></label>
+      <label>Meta<br><input class="nome-in" style="width:100%" id="nm-meta" inputmode="decimal" required placeholder="70"></label>
+      <label>Unidade<br><select id="nm-un" class="nome-in" style="width:100%"><option value="%">%</option><option value="n">número</option><option value="R$">R$</option><option value="dias">dias úteis</option></select></label>
+      <label>Peso<br><input class="nome-in" style="width:100%" id="nm-peso" inputmode="decimal" required placeholder="0,5"></label>
+      <label>Fonte (opcional)<br><input class="nome-in" style="width:100%" id="nm-fonte" maxlength="90" placeholder="De onde sai o número"></label>
+      <button class="btn forte" type="submit">Adicionar meta</button>
+    </form>
+    <p class="ind-fonte" style="padding:0 16px 12px">O peso é relativo: as outras linhas do bloco se ajustam para ele continuar somando 2 (função) ou 8 (empresa). <span id="nm-msg"></span></p></section>`;
+}
+async function salvarNovaMeta(form) {
+  const num = id => Number(String(form.querySelector(id).value).replace(",", "."));
+  const meta = {
+    bloco: form.querySelector("#nm-bloco").value,
+    nome: form.querySelector("#nm-nome").value.trim(),
+    tipo: form.querySelector("#nm-tipo").value,
+    dir: form.querySelector("#nm-dir").value,
+    meta: num("#nm-meta"), un: form.querySelector("#nm-un").value, peso: num("#nm-peso"),
+    fonte: form.querySelector("#nm-fonte").value.trim(), criada_em: new Date().toISOString(),
+  };
+  const msg = form.parentElement.querySelector("#nm-msg");
+  if (!meta.nome || !isFinite(meta.meta) || !(meta.peso > 0)) { msg.textContent = "Preencha indicador, meta e um peso maior que zero."; return; }
+  if (DB && PODE_GRAVAR !== false) {
+    try { await DB.collection("metas").add(meta); msg.textContent = "Meta adicionada."; return; }
+    catch (e) { if (e?.code === "invalid_argument") { PODE_GRAVAR = false; } msg.textContent = "Não consegui salvar para todos: " + (e?.message || e?.code) + "."; return; }
+  }
+  S.metasLocais = [...(S.metasLocais || []), { ...meta, id: "l-" + Date.now().toString(36) }];
+  salvar(); desenhar();
+}
 function btnRem(bloco, id) {
   if (!S.editando) return "";
   const lista = bloco === "empresa" ? empDe() : indDe(FUNCOES.find(f => f.id === bloco));
   if (lista.length <= 1) return `<span class="ind-fonte">última linha do bloco</span>`;
+  const nova = metasDe(bloco).find(m => m.id === id);
+  if (nova) return `<button class="linkbtn rem" data-apagar-meta="${esc(nova.docId || nova.id)}">Apagar meta nova</button>`;
   return `<button class="linkbtn rem" data-rem-linha="${bloco}:${id}">Remover linha</button>`;
 }
 function removidasHtml(f) {
   const nomes = [
-    ...(S.removidas?.[f.id] || []).map(id => ({ bloco: f.id, id, nome: f.ind.find(i => i.id === id)?.nome })),
+    ...(S.removidas?.[f.id] || []).map(id => ({ bloco: f.id, id, nome: listaBase(f).find(i => i.id === id)?.nome })),
     ...(S.removidas?.empresa || []).map(id => ({ bloco: "empresa", id, nome: EMPRESA.find(i => i.id === id)?.nome + " (empresa, vale para todos)" })),
   ].filter(x => x.nome);
   if (!nomes.length) return "";
@@ -885,7 +931,7 @@ function tabelaLancar(f, pid) {
     let meta, base;
     if (ind.id === "fat") { meta = `<span class="num">130 · 150 · 200 mil</span>`; base = `<span class="num" title="Faturamento de setembro">${fmt(FAT_SETEMBRO, "R$")}</span>`; }
     else if (ind.id === "sat") { meta = `<span class="num" id="meta-sat">${fmt(metaSat(), "%")}</span>`; base = inp("emp-satBase", S.empresa.satBase, 'data-emp-base="satBase" aria-label="Satisfação base"'); }
-    else { meta = `<span class="num">${fmtMeta(ind)}</span>`; base = `<span class="tag corte">corte</span>`; }
+    else { meta = `<span class="num">${fmtMeta(ind)}</span>`; base = ind.tipo === "corte" ? `<span class="tag corte">corte</span>` : inp(`emp-b-${ind.id}`, S.empresa.bases?.[ind.id], `data-emp-base="b:${ind.id}" aria-label="Base ${esc(ind.nome)}"`); }
     const cels = mesesVis().map(m => `<td class="d">${inp(`emp-${ind.id}-${m.id}`, S.empresa.meses[m.id]?.[ind.id], `data-emp="${ind.id}" data-mes="${m.id}" aria-label="${esc(ind.nome)} ${m.nome}"`)}</td>`).join("");
     emp += `<tr><td><div class="ind-nome">${esc(ind.nome)}</div><div class="ind-fonte">${esc(ind.fonte)}</div>${btnRem("empresa", ind.id)}</td>
       <td class="d num">${fmtPeso(ind.peso)}</td><td class="d">${meta}</td><td class="d">${base}</td>${cels}
@@ -1078,7 +1124,7 @@ function tabelaSim(f, pid) {
           <td>${slider(`s-fat-${m.id}`, ind, sim.empresa.fat[m.id], `data-sfat="${m.id}"`)}</td>${celulaProg(p, ind.peso / 3, "sfat-" + m.id)}</tr>`;
       });
     } else {
-      const p = ind.id === "sat" ? progresso(ind, sim.empresa.sat, S.empresa.satBase, metaSat()) : progresso(ind, sim.empresa[ind.id], null);
+      const p = ind.id === "sat" ? progresso(ind, sim.empresa.sat, S.empresa.satBase, metaSat()) : progresso(ind, sim.empresa[ind.id], S.empresa.bases?.[ind.id] ?? null);
       emp += `<tr><td><div class="ind-nome">${esc(ind.nome)}${ind.tipo === "corte" ? '<span class="tag corte">corte</span>' : ""}</div><div class="ind-fonte">${esc(ind.fonte)}</div></td>
         <td class="d num">${fmtPeso(ind.peso)}</td><td class="d num">${ind.id === "sat" ? fmt(metaSat(), "%") : fmtMeta(ind)}</td>
         <td>${slider(`s-e-${ind.id}`, ind, sim.empresa[ind.id], `data-se="${ind.id}"`)}</td>${celulaProg(p, ind.peso, "se-" + ind.id)}</tr>`;
@@ -1207,6 +1253,14 @@ palco.addEventListener("click", e => {
   if (t.dataset.sub) { S.sub[f.id] = t.dataset.sub; salvar(); desenhar(); return; }
   if (t.dataset.modo) { S.modo[f.id] = t.dataset.modo; salvar(); desenhar(); return; }
   if (t.dataset.sim) { const pid = pessoaAtual(f); S.sim[pid] = simDe(f, pid, t.dataset.sim); salvar(); desenhar(); return; }
+  if (t.dataset.apagarMeta) {
+    const id = t.dataset.apagarMeta;
+    if (confirmar !== "meta-" + id) { confirmar = "meta-" + id; t.textContent = "Clique de novo para apagar para todos"; return; }
+    confirmar = null;
+    if (id.startsWith("l-")) { S.metasLocais = (S.metasLocais || []).filter(m => m.id !== id); salvar(); desenhar(); return; }
+    DB?.doc("metas/" + id).delete().catch(e => { t.textContent = "Não consegui apagar: " + (e?.message || e?.code); });
+    return;
+  }
   if (t.dataset.periodo) { S.periodo = t.dataset.periodo; S.sim = {}; salvar(); desenhar(); return; }
   if (t.dataset.cliente !== undefined) { S.clienteSel = t.dataset.cliente || null; salvar(); desenhar(); return; }
   if (t.dataset.contasMes) { const [g, i] = t.dataset.contasMes.split("|"); S.contasMes = { ...(S.contasMes || {}), [g]: i }; salvar(); desenhar(); return; }
@@ -1260,7 +1314,8 @@ palco.addEventListener("input", e => {
   if (v !== null && Number.isNaN(v)) { el.classList.add("fora"); return; }
   el.classList.remove("fora");
   if (S.exemplo) S.exemplo = false;
-  if (el.dataset.empBase) S.empresa[el.dataset.empBase] = v;
+  if (el.dataset.empBase?.startsWith("b:")) { S.empresa.bases = S.empresa.bases || {}; S.empresa.bases[el.dataset.empBase.slice(2)] = v; }
+  else if (el.dataset.empBase) S.empresa[el.dataset.empBase] = v;
   else if (el.dataset.emp) { S.empresa.meses[el.dataset.mes] = S.empresa.meses[el.dataset.mes] || {}; S.empresa.meses[el.dataset.mes][el.dataset.emp] = v; }
   else if (f) {
     const pid = pessoaAtual(f); const d = S.dados[pid];
@@ -1299,11 +1354,29 @@ function atualizarLinhasSim(f, pid) {
   });
   empDe().filter(i => i.id !== "fat").forEach(ind => {
     document.getElementById(`s-e-${ind.id}-o`).textContent = fmt(sim.empresa[ind.id], ind.un);
-    const p = ind.id === "sat" ? progresso(ind, sim.empresa.sat, S.empresa.satBase, metaSat()) : progresso(ind, sim.empresa[ind.id], null);
+    const p = ind.id === "sat" ? progresso(ind, sim.empresa.sat, S.empresa.satBase, metaSat()) : progresso(ind, sim.empresa[ind.id], S.empresa.bases?.[ind.id] ?? null);
     trocarProg("se-" + ind.id, p, ind.peso);
   });
 }
 
+palco.addEventListener("submit", e => { if (e.target.id === "form-meta") { e.preventDefault(); salvarNovaMeta(e.target); } });
+// Armazenamento compartilhado das metas novas: some sem erro quando a visualização não oferece.
+(async () => {
+  const db = await (window.claude?.use?.("db") ?? Promise.resolve(null)).catch(() => null);
+  if (!db) return;
+  DB = db;
+  const user = await (window.claude?.use?.("user") ?? Promise.resolve(null)).catch(() => null);
+  try { PODE_GRAVAR = user ? (user.canEdit?.() ?? null) : null; if (PODE_GRAVAR && typeof PODE_GRAVAR.then === "function") PODE_GRAVAR = await PODE_GRAVAR; } catch (e) { PODE_GRAVAR = null; }
+  db.collection("metas").onSnapshot(snap => {
+    METAS_NOVAS = snap.docs.filter(d => d.exists).map(d => ({ ...d.data(), id: "x-" + d.id, docId: d.id }));
+    redesenhar();
+  }, () => {});
+})();
+function redesenhar() {
+  const a = document.activeElement;
+  if (a && (a.tagName === "INPUT" || a.tagName === "SELECT") && a.type !== "checkbox" && a.type !== "range") { setTimeout(redesenhar, 3000); return; }
+  desenhar();
+}
 desenhar();
 fetch("contrato-dados.json", { cache: "no-store" })
   .then(r => r.ok ? r.json() : null)
