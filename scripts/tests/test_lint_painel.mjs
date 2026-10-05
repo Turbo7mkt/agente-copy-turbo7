@@ -25,8 +25,8 @@ const i = html.indexOf(INICIO), f = html.indexOf(FIM);
 assert.ok(i !== -1 && f > i, "não achei o bloco do linter em docs/painel-artifact.html");
 
 const modulo = join(mkdtempSync(join(tmpdir(), "lintpainel-")), "linter.mjs");
-writeFileSync(modulo, html.slice(i, f) + "\nexport { lintar, corpoDaCopy };\n", "utf8");
-const { lintar, corpoDaCopy } = await import("file://" + modulo);
+writeFileSync(modulo, html.slice(i, f) + "\nexport { lintar, corpoDaCopy, blocosDeCopy, linhasDeCopy };\n", "utf8");
+const { lintar, corpoDaCopy, blocosDeCopy, linhasDeCopy } = await import("file://" + modulo);
 
 let ok = 0;
 const falhas = [];
@@ -80,6 +80,39 @@ t("número da linha continua certo com nota no fim", () =>
   assert.equal(lintar("um\ndois\nÚltimas vagas hoje\n" + NOTA, false)[0].linha, 3));
 t("corpoDaCopy corta na nota", () =>
   assert.equal(corpoDaCopy("copy\n\n## Nota de conformidade\n\nexcelência\n"), "copy\n"));
+
+/* --- Limites de tamanho: o Meta trunca, e copy cortada não vende. --- */
+t("título curto passa", () =>
+  assert.ok(!codigos("**Título:** Comece por um ambiente", true).includes("TAMANHO-titulo")));
+t("caso real Mhavi 05/10 — título de 55 caracteres reprova", () =>
+  assert.ok(codigos("**Título:** Comece por um ambiente. A casa inteira agradece depois.", true).includes("TAMANHO-titulo")));
+t("título não conta a marcação", () =>
+  assert.ok(!codigos("**Título:** **Projeto que cabe no seu prazo**", true).includes("TAMANHO-titulo")));
+t("caso real Mhavi 05/10 — descrição de 50 caracteres reprova", () =>
+  assert.ok(codigos("**Descrição:** Valor fechado por metragem · Showroom em São Paulo", true).includes("TAMANHO-descricao")));
+t("descrição curta passa", () =>
+  assert.ok(!codigos("**Descrição:** Showroom em SP", true).includes("TAMANHO-descricao")));
+t("copy curta passa", () =>
+  assert.ok(!codigos("A gaveta que continua firme depois de anos.").includes("TAMANHO-copy")));
+t("caso real Mhavi 05/10 — três parágrafos de ~300 somam e reprovam", () => {
+  const par = "Frase que ocupa espaço sem chamar atenção por si. ".repeat(3);
+  assert.ok(codigos(`## ÂNGULO — teste\n\n${par}\n\n${par}\n\n${par}\n`).includes("TAMANHO-copy"));
+});
+t("cada cabeçalho tem seu próprio orçamento", () => {
+  const curta = "Uma dor, uma prova, um CTA. Venha nos fazer uma visita.";
+  let texto = "";
+  for (let n = 1; n <= 10; n++) texto += `## ÂNGULO ${n}\n\n${curta}\n\n`;
+  assert.ok(!codigos(texto).includes("TAMANHO-copy"));
+});
+t("a nota de conformidade não conta no tamanho", () =>
+  assert.ok(!codigos("Copy curta e limpa.\n\n## Nota de conformidade\n\n" + "explicação longa ".repeat(60)).includes("TAMANHO-copy")));
+t("blocosDeCopy tira rótulo e metadado", () =>
+  assert.deepEqual(
+    blocosDeCopy(linhasDeCopy("**SOLUÇÃO**\n\n**Gatilho:** Desejo\n\nO texto.\n")).map((b) => b[1]),
+    ["O texto."]));
+t("blocosDeCopy junta parágrafos do mesmo cabeçalho", () =>
+  assert.deepEqual(
+    blocosDeCopy(linhasDeCopy("## A\n\num\n\ndois\n")).map((b) => b[1]), ["um dois"]));
 
 console.log(`${ok} passaram, ${falhas.length} falharam`);
 for (const f of falhas) console.log("  ✗ " + f);

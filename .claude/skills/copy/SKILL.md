@@ -144,19 +144,40 @@ Depois que o usuário escolher, monte o conjunto respeitando:
 - os de imagem precisam caber em headline de 8 palavras
 - o de carrossel precisa ter progressão em 5 cards
 
+## Limites de tamanho — inegociáveis
+
+O Meta trunca o texto principal em ~125 caracteres no feed. Peça longa não fica
+"completa": fica cortada antes da oferta.
+
+| Peça | Limite |
+| --- | --- |
+| Texto principal | **400 caracteres**, com a dor e a loja nos primeiros 125 |
+| Título | **40 caracteres** |
+| Descrição | **30 caracteres** |
+
+**Uma dor, uma prova, um CTA.** Argumento que sobrar vai para o próximo
+criativo, não para o mesmo. O linter reprova com `TAMANHO-copy`,
+`TAMANHO-titulo` e `TAMANHO-descricao`.
+
+Detalhe e a origem da régua em
+[`base-conhecimento/regras/formatos-entrega.md`](../../../base-conhecimento/regras/formatos-entrega.md).
+
 ## Gravar e validar
 
 Grave em `clientes/<slug>/copies/AAAA-MM-DD-<tema>.md`.
 
-Feche o arquivo com uma seção **Nota de conformidade** declarando:
+Feche o arquivo com uma seção **Nota de conformidade** em **no máximo 6 linhas
+de bala**. Só o que muda a decisão de subir ou não:
 
 - **o ângulo escolhido e por quem** — "escolhido pelo gestor" ou "sugerido e
-  confirmado"
-- **a data da última sincronização com o Drive** usada na geração
-- por que `usa_preco` foi respeitado do jeito que foi
-- qual prova ficou de fora e por quê
-- que promessas foram evitadas por causa das restrições
-- recomendação de geografia/segmentação, quando o briefing tiver
+  confirmado" — e a data da última sincronização com o Drive
+- qual prova ficou de fora e por quê, e como `usa_preco` foi respeitado
+- que promessa foi evitada por restrição
+- alerta que bloqueia a subida (destino do tráfego, site fora do ar)
+- segmentação em uma linha, quando o briefing tiver
+
+Sem parágrafos, sem repetir a copy dentro da nota. **Nota maior que a copy é
+sinal de que a copy encolheu** — volte e reescreva a peça, não a nota.
 
 Então rode:
 

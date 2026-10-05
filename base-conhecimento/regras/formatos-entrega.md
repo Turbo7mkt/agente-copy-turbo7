@@ -113,3 +113,35 @@ LEGENDA DO POST (3-5 linhas):
 
 CTA do botão: [opção]
 ```
+
+---
+
+# Limites de tamanho — o que o Meta realmente exibe
+
+> Acrescentado em 05/10/2026, depois de uma copy sair com 1.127 caracteres de
+> texto principal. O Meta corta em ~125: o leitor via a primeira frase e um
+> "Ver mais", sem chegar na loja nem na oferta. Longo demais não é "caprichado",
+> é anúncio que não foi lido.
+
+| Peça | Limite | Por quê |
+| --- | --- | --- |
+| **Texto principal** | **400 caracteres**, com dor + marca nos **primeiros 125** | 125 é onde o Meta trunca no feed. O que vem depois só é lido por quem clicou em "Ver mais" |
+| **Título** | **40 caracteres** | Acima disso o Meta corta no meio da frase |
+| **Descrição** | **30 caracteres** | Idem, e em vários posicionamentos nem aparece |
+| **Nota de conformidade** | **6 linhas** | É recado para o gestor, não entrega. Nota maior que a copy é sinal de que a copy encolheu |
+
+A régua dos 400 não é arbitrária: as copies **aprovadas** desta base têm
+mediana entre 126 e 317 caracteres por bloco. 400 já é o teto generoso.
+
+## O corte, na prática
+
+Escrever curto não é cortar argumento — é escolher **um**. A copy de 1.127
+caracteres tentava entregar, de uma vez: a dor da reforma por etapas, a
+continuidade do projeto, a tabela inteira de preço, o showroom, o arquiteto e a
+nota do Google. Seis argumentos brigando por 125 caracteres de atenção.
+
+Regra prática: **uma dor, uma prova, um CTA.** O resto é material para o próximo
+criativo, não para o mesmo.
+
+`scripts/lint_copy.py` reprova com `TAMANHO-titulo`, `TAMANHO-descricao` e
+`TAMANHO-paragrafo` quando o limite estoura.

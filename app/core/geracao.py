@@ -112,6 +112,19 @@ def montar_system(briefing: Briefing) -> str:
     return "\n".join(partes)
 
 
+# O Meta trunca o texto principal em ~125 caracteres. Sem isto no pedido, o
+# modelo entrega peça de 1.000+ caracteres que o leitor nunca termina — foi o
+# que aconteceu com a Mhavi em 05/10. O linter reprova com TAMANHO-*.
+LIMITES_DE_TAMANHO = """Limites de tamanho — o Meta trunca, e copy cortada não é lida:
+- Texto principal: **no máximo 400 caracteres**, com a dor e a loja nos primeiros 125.
+- Título: **no máximo 40 caracteres**. Descrição: **no máximo 30**.
+- Uma dor, uma prova, um CTA. Argumento que sobrar vai para o próximo criativo, não para o mesmo."""
+
+# A nota é recado para o gestor, não entrega. Antes deste limite ela saía com
+# quatro vezes o tamanho da copy que estava explicando.
+NOTA_DE_CONFORMIDADE = """Feche com `## Nota de conformidade` em **no máximo 6 linhas de bala**, só o que muda a decisão de subir ou não: ângulo usado e quem escolheu; prova do briefing que ficou de fora e por quê; promessa evitada por restrição; alerta que bloqueia (destino do tráfego, site fora do ar); segmentação em uma linha. Sem parágrafos, sem repetir a copy dentro da nota. Nota maior que a copy é sinal de que a copy encolheu."""
+
+
 def montar_pedido(angulos: list[dict], formato: str, observacao: str = "") -> str:
     lista = "\n".join(
         f"- **{a['nome']}** · gatilho {a['gatilho']} · fala com: {a['fala_com']} "
@@ -126,10 +139,9 @@ def montar_pedido(angulos: list[dict], formato: str, observacao: str = "") -> st
         "",
         f"Formato de entrega: {formato}",
         "",
-        "Feche com uma seção `## Nota de conformidade` declarando: o ângulo usado e "
-        "que foi escolhido pelo gestor; qual prova do briefing ficou de fora e por "
-        "quê; que promessas foram evitadas por causa das restrições; e a recomendação "
-        "de segmentação, quando o briefing tiver.",
+        LIMITES_DE_TAMANHO,
+        "",
+        NOTA_DE_CONFORMIDADE,
         "",
         "Responda apenas com o markdown da entrega, sem preâmbulo.",
     ]

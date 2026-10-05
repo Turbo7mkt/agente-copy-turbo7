@@ -89,7 +89,7 @@ clientes/
 scripts/
   lint_copy.py           verificação determinística das regras
   planilha/              Apps Script que grava a copy na Criativos Turbo7
-  tests/                 36 do linter + 16 da porta JS + 14 do Apps Script
+  tests/                 52 do linter + 27 da porta JS + 14 do Apps Script
 docs/
   painel-artifact.html   cópia versionada do painel publicado como Artifact
   gravar-no-drive.md     o que dá e o que não dá para escrever no Google

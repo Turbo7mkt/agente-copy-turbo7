@@ -11,6 +11,12 @@ Regras cobertas (base-conhecimento/regras/regras-copy.md):
     R7  clichês de mercado / português de anúncio traduzido
     PRECO  preço, parcela ou desconto quando o briefing tem usa_preco: false
 
+Limites de tamanho (base-conhecimento/regras/formatos-entrega.md) — o que o
+Meta realmente exibe antes de truncar:
+    TAMANHO-titulo       título acima de 40 caracteres
+    TAMANHO-descricao    descrição acima de 30 caracteres
+    TAMANHO-copy         texto corrido de uma copy acima de 400 caracteres
+
 Regras da identidade Italínea (skill `italinea-identidade-visual`,
 references/ofertas-e-copy.md) — aplicadas quando o preço é permitido:
     MARCA-preco-formato  preço fora do padrão `R$ 34.900`
@@ -54,6 +60,36 @@ EMOJI_RE = re.compile(
 )
 
 EXCLAMACAO_SERIE_RE = re.compile(r"!\s*!")
+
+# --- Limites de tamanho ---------------------------------------------------
+# O Meta trunca o texto principal em ~125 caracteres no feed, o título em ~40 e
+# a descrição em ~30. Copy que estoura isso não fica "completa": fica cortada no
+# meio, e o leitor nunca chega na oferta. As copies aprovadas desta base têm
+# mediana entre 126 e 317 caracteres por bloco — 400 já é teto generoso.
+MAX_TITULO = 40
+MAX_DESCRICAO = 30
+MAX_COPY = 400
+
+TITULO_RE = re.compile(r"^\s*(?:[-*]\s*)?\**\s*t[íi]tulo\s*:?\**\s*:?\s*(.+)$", re.IGNORECASE)
+DESCRICAO_RE = re.compile(r"^\s*(?:[-*]\s*)?\**\s*descri[çc][ãa]o\s*:?\**\s*:?\s*(.+)$", re.IGNORECASE)
+
+# Cabeçalho: abre uma copy nova. Cada uma tem o seu próprio orçamento de texto.
+CABECALHO_RE = re.compile(r"^\s*#{1,6}\s")
+
+# Estrutura do documento, não texto que o leitor do anúncio vê.
+ESTRUTURA_RE = re.compile(r"^\s*(?:>\s|\||---|===|\*\*\*)")
+
+# Rótulo solto de bloco: "**SOLUÇÃO**", "**CTA**". Organiza a entrega, não é copy.
+ROTULO_RE = re.compile(r"^\s*\*\*[^*]+\*\*\s*$")
+
+# Metadado da entrega: "Título:", "**Gatilho:** Desejo", "CTA do botão Meta Ads:".
+# O título e a descrição têm limite próprio; os outros não são texto de anúncio.
+METADADO_RE = re.compile(r"^\s*(?:[-*]\s*)?\**\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ /]{0,34}\**\s*:")
+
+
+def _limpar_marcacao(texto: str) -> str:
+    """Tira negrito, itálico e crase para contar o que o leitor realmente vê."""
+    return re.sub(r"[*_`]", "", texto).strip()
 
 
 @dataclass(frozen=True)
@@ -226,6 +262,40 @@ def corpo_da_copy(texto: str) -> str:
     return texto[: inicio if inicio != -1 else achado.start()]
 
 
+def blocos_de_copy(linhas: list[tuple[int, str]]) -> list[tuple[int, str]]:
+    """Junta, por cabeçalho, o texto corrido de cada copy: (nº da linha, texto).
+
+    A unidade certa é a copy inteira, não o parágrafo. A peça que motivou esta
+    regra tinha três parágrafos de ~300 caracteres: nenhum chamava atenção
+    sozinho, e somados davam 1.127 — nove vezes o que o Meta exibe.
+
+    Fora da conta ficam o que não é texto de anúncio: cabeçalho, citação,
+    tabela, rótulo de bloco ("**SOLUÇÃO**") e metadado ("Gatilho: Desejo").
+    """
+    resultado: list[tuple[int, str]] = []
+    atual: list[str] = []
+    inicio = 0
+
+    def fechar() -> None:
+        nonlocal atual, inicio
+        if atual:
+            resultado.append((inicio, " ".join(atual)))
+            atual = []
+
+    for numero, linha in linhas:
+        if CABECALHO_RE.match(linha):
+            fechar()
+            continue
+        nu = linha.strip()
+        if not nu or ESTRUTURA_RE.match(linha) or ROTULO_RE.match(linha) or METADADO_RE.match(linha):
+            continue
+        if not atual:
+            inicio = numero
+        atual.append(_limpar_marcacao(nu))
+    fechar()
+    return resultado
+
+
 def verificar(arquivo: Path, permitir_preco: bool) -> list[Achado]:
     texto = arquivo.read_text(encoding="utf-8")
     regras = list(REGRAS_BASE)
@@ -241,6 +311,25 @@ def verificar(arquivo: Path, permitir_preco: bool) -> list[Achado]:
             for match in regra.padrao.finditer(linha):
                 achados.append(
                     Achado(arquivo, numero, regra.codigo, regra.descricao, match.group(0))
+                )
+
+        for regex, codigo, limite, rotulo in (
+            (TITULO_RE, "TAMANHO-titulo", MAX_TITULO, "título"),
+            (DESCRICAO_RE, "TAMANHO-descricao", MAX_DESCRICAO, "descrição"),
+        ):
+            achado_campo = regex.match(linha)
+            if not achado_campo:
+                continue
+            conteudo = _limpar_marcacao(achado_campo.group(1))
+            if len(conteudo) > limite:
+                achados.append(
+                    Achado(
+                        arquivo,
+                        numero,
+                        codigo,
+                        f"{rotulo} com {len(conteudo)} caracteres (o Meta exibe {limite})",
+                        conteudo[:60],
+                    )
                 )
 
         if EXCLAMACAO_SERIE_RE.search(linha):
@@ -271,6 +360,20 @@ def verificar(arquivo: Path, permitir_preco: bool) -> list[Achado]:
                         match.group(0),
                     )
                 )
+
+    # Copy longa demais: o Meta trunca e o leitor nunca chega na oferta.
+    for numero, bloco in blocos_de_copy(linhas_de_copy(texto)):
+        if len(bloco) > MAX_COPY:
+            achados.append(
+                Achado(
+                    arquivo,
+                    numero,
+                    "TAMANHO-copy",
+                    f"copy com {len(bloco)} caracteres de texto corrido "
+                    f"(máx {MAX_COPY}; o Meta trunca em ~125)",
+                    bloco[:60] + "…",
+                )
+            )
 
     # Rodapé legal é obrigatório em peça que traz preço. A nota de conformidade
     # fica de fora: preço citado lá é explicação, não oferta.

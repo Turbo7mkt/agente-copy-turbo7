@@ -404,18 +404,68 @@ function corpoDaCopy(texto) {
   return i === -1 ? texto : linhas.slice(0, i).join("\n");
 }
 
+/* --- Limites de tamanho ---------------------------------------------------
+   O Meta trunca o texto principal em ~125 caracteres no feed, o título em ~40
+   e a descrição em ~30. Copy que estoura não fica "completa": fica cortada, e
+   o leitor nunca chega na oferta. As copies aprovadas da base têm mediana
+   entre 126 e 317 caracteres — 400 já é teto generoso.
+   Espelha scripts/lint_copy.py; as duas implementações mudam juntas. */
+const MAX_TITULO = 40;
+const MAX_DESCRICAO = 30;
+const MAX_COPY = 400;
+
+const TITULO = /^\s*(?:[-*]\s*)?\**\s*t[íi]tulo\s*:?\**\s*:?\s*(.+)$/i;
+const DESCRICAO = /^\s*(?:[-*]\s*)?\**\s*descri[çc][ãa]o\s*:?\**\s*:?\s*(.+)$/i;
+
+const CABECALHO = /^\s*#{1,6}\s/;
+const ESTRUTURA = /^\s*(?:>\s|\||---|===|\*\*\*)/;
+const ROTULO = /^\s*\*\*[^*]+\*\*\s*$/;
+const METADADO = /^\s*(?:[-*]\s*)?\**\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ /]{0,34}\**\s*:/;
+
+const limparMarcacao = (t) => t.replace(/[*_`]/g, "").trim();
+
+/** Linhas entregáveis: fora os blocos de código e a nota de conformidade. */
+function linhasDeCopy(texto) {
+  const fora = [];
+  let dentroFence = false;
+  corpoDaCopy(texto).split("\n").forEach((linha, i) => {
+    if (/^\s*```/.test(linha)) { dentroFence = !dentroFence; return; }
+    if (dentroFence) return;
+    fora.push([i + 1, linha]);
+  });
+  return fora;
+}
+
+/* A unidade é a copy inteira, não o parágrafo: a peça que motivou a regra
+   tinha três parágrafos de ~300 caracteres — nenhum gritante sozinho, 1.127
+   somados. Fora da conta: cabeçalho, citação, tabela, rótulo de bloco
+   ("**SOLUÇÃO**") e metadado ("Gatilho: Desejo"). */
+function blocosDeCopy(linhas) {
+  const blocos = [];
+  let atual = [];
+  let inicio = 0;
+  const fechar = () => {
+    if (atual.length) { blocos.push([inicio, atual.join(" ")]); atual = []; }
+  };
+  for (const [n, linha] of linhas) {
+    if (CABECALHO.test(linha)) { fechar(); continue; }
+    const nu = linha.trim();
+    if (!nu || ESTRUTURA.test(linha) || ROTULO.test(linha) || METADADO.test(linha)) continue;
+    if (!atual.length) inicio = n;
+    atual.push(limparMarcacao(nu));
+  }
+  fechar();
+  return blocos;
+}
+
 function lintar(texto, usaPreco) {
   const achados = [];
   const regras = REGRAS_BASE.concat(usaPreco ? REGRAS_MARCA : [REGRA_PRECO]);
   // Fora da checagem: a nota de conformidade e tudo depois dela.
   const corpo = corpoDaCopy(texto);
-  const linhas = corpo.split("\n");
-  let dentroFence = false;
+  const linhas = linhasDeCopy(texto);
 
-  linhas.forEach((linha, i) => {
-    if (/^\s*```/.test(linha)) { dentroFence = !dentroFence; return; }
-    if (dentroFence) return;
-    const n = i + 1;
+  linhas.forEach(([n, linha]) => {
 
     for (const [codigo, desc, re] of regras) {
       re.lastIndex = 0;
@@ -425,6 +475,18 @@ function lintar(texto, usaPreco) {
         if (m.index === re.lastIndex) re.lastIndex++;
       }
     }
+    for (const [re, codigo, limite, rotulo] of [
+      [TITULO, "TAMANHO-titulo", MAX_TITULO, "título"],
+      [DESCRICAO, "TAMANHO-descricao", MAX_DESCRICAO, "descrição"],
+    ]) {
+      const achadoCampo = re.exec(linha);
+      if (!achadoCampo) continue;
+      const conteudo = limparMarcacao(achadoCampo[1]);
+      if (conteudo.length > limite) {
+        achados.push({ linha: n, codigo, desc: `${rotulo} com ${conteudo.length} caracteres (o Meta exibe ${limite})`, trecho: conteudo.slice(0, 60) });
+      }
+    }
+
     if (EXCLAMACAO.test(linha)) achados.push({ linha: n, codigo: "R2-exclamacao", desc: "exclamação em série", trecho: linha.trim().slice(0, 50) });
 
     const emojis = linha.match(EMOJI) || [];
@@ -439,6 +501,17 @@ function lintar(texto, usaPreco) {
       }
     }
   });
+
+  for (const [n, bloco] of blocosDeCopy(linhas)) {
+    if (bloco.length > MAX_COPY) {
+      achados.push({
+        linha: n,
+        codigo: "TAMANHO-copy",
+        desc: `copy com ${bloco.length} caracteres de texto corrido (máx ${MAX_COPY}; o Meta trunca em ~125)`,
+        trecho: bloco.slice(0, 60) + "…",
+      });
+    }
+  }
 
   // Rodapé legal é checagem de documento: preço citado na nota é explicação,
   // não oferta, então o corpo é que vale.
@@ -552,7 +625,15 @@ function montarPrompt(c, angulos, formato, obs) {
     "", lista, "",
     `Formato de entrega: ${formato}`,
     "",
-    "Feche com uma seção `## Nota de conformidade` declarando: o ângulo usado e que foi escolhido pelo gestor; qual prova do briefing ficou de fora e por quê; que promessas foram evitadas por causa das restrições; e a recomendação de segmentação, quando o briefing tiver.",
+    /* Sem isto o modelo entrega peça de 1.000+ caracteres que o leitor nunca
+       termina — foi o que aconteceu com a Mhavi em 05/10. O linter reprova
+       com TAMANHO-*, mas é melhor não gerar do que gerar e reprovar. */
+    "## Limites de tamanho — o Meta trunca, e copy cortada não é lida",
+    "- Texto principal: **no máximo 400 caracteres**, com a dor e a loja nos primeiros 125.",
+    "- Título: **no máximo 40 caracteres**. Descrição: **no máximo 30**.",
+    "- Uma dor, uma prova, um CTA. Argumento que sobrar vai para o próximo criativo, não para o mesmo.",
+    "",
+    "Feche com `## Nota de conformidade` em **no máximo 6 linhas de bala**, só o que muda a decisão de subir ou não: ângulo usado e quem escolheu; prova do briefing que ficou de fora e por quê; promessa evitada por restrição; alerta que bloqueia (destino do tráfego, site fora do ar); segmentação em uma linha. Sem parágrafos, sem repetir a copy dentro da nota. Nota maior que a copy é sinal de que a copy encolheu.",
     "",
     "Responda apenas com o markdown da entrega, sem preâmbulo.",
     obs && obs.trim() ? `\nObservação do gestor: ${obs.trim()}` : "",

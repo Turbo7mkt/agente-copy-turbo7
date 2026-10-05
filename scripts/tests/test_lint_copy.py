@@ -7,7 +7,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from lint_copy import briefing_permite_preco, linhas_de_copy, verificar  # noqa: E402
+from lint_copy import (  # noqa: E402
+    blocos_de_copy,
+    briefing_permite_preco,
+    linhas_de_copy,
+    verificar,
+)
 
 RAIZ = Path(__file__).resolve().parents[2]
 
@@ -203,6 +208,88 @@ class TestNotaDeConformidade(unittest.TestCase):
         for nivel in ["#", "##", "###"]:
             texto = f"Copy limpa.\n\n{nivel} Nota de conformidade\n\nSem excelência aqui.\n"
             self.assertEqual(self._achados(texto), [], f"nível {nivel} não cortou")
+
+
+class TestTamanho(unittest.TestCase):
+    """O Meta trunca. Copy que estoura não fica completa — fica cortada."""
+
+    def _achados(self, texto, usa_preco=True):
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False, encoding="utf-8") as f:
+            f.write(texto)
+            caminho = Path(f.name)
+        self.addCleanup(lambda: caminho.unlink(missing_ok=True))
+        return verificar(caminho, usa_preco)
+
+    def _codigos(self, texto, usa_preco=True):
+        return [a.codigo for a in self._achados(texto, usa_preco)]
+
+    def test_titulo_curto_passa(self):
+        self.assertNotIn("TAMANHO-titulo", self._codigos("**Título:** Comece por um ambiente\n"))
+
+    def test_titulo_longo_reprova(self):
+        # O caso real da Mhavi em 05/10: 55 caracteres, o Meta exibe 40.
+        texto = "**Título:** Comece por um ambiente. A casa inteira agradece depois.\n"
+        self.assertIn("TAMANHO-titulo", self._codigos(texto))
+
+    def test_titulo_nao_conta_a_marcacao(self):
+        # 38 caracteres de texto, 42 com os asteriscos. Quem lê não vê asterisco.
+        texto = "**Título:** **Projeto que cabe no seu prazo**\n"
+        self.assertNotIn("TAMANHO-titulo", self._codigos(texto))
+
+    def test_descricao_longa_reprova(self):
+        texto = "**Descrição:** Valor fechado por metragem · Showroom em São Paulo\n"
+        self.assertIn("TAMANHO-descricao", self._codigos(texto))
+
+    def test_descricao_curta_passa(self):
+        self.assertNotIn("TAMANHO-descricao", self._codigos("**Descrição:** Showroom em SP\n"))
+
+    def test_copy_curta_passa(self):
+        texto = "A gaveta que continua firme depois de anos. Venha nos fazer uma visita.\n"
+        self.assertNotIn("TAMANHO-copy", self._codigos(texto))
+
+    def test_copy_longa_reprova(self):
+        self.assertIn("TAMANHO-copy", self._codigos("palavra " * 70))
+
+    def test_soma_de_paragrafos_reprova(self):
+        """O caso da Mhavi: três parágrafos de ~300, nenhum gritante sozinho."""
+        paragrafo = "Frase que ocupa espaço sem chamar atenção por si. " * 3
+        texto = f"## ÂNGULO — teste\n\n{paragrafo}\n\n{paragrafo}\n\n{paragrafo}\n"
+        self.assertIn("TAMANHO-copy", self._codigos(texto))
+
+    def test_cada_cabecalho_tem_seu_proprio_orcamento(self):
+        """Dez copies curtas não somam até reprovar — cada uma conta sozinha."""
+        curta = "Uma dor, uma prova, um CTA. Venha nos fazer uma visita."
+        texto = "".join(f"## ÂNGULO {n}\n\n{curta}\n\n" for n in range(1, 11))
+        self.assertNotIn("TAMANHO-copy", self._codigos(texto))
+
+    def test_nota_de_conformidade_nao_conta_no_tamanho(self):
+        texto = "Copy curta e limpa.\n\n## Nota de conformidade\n\n" + ("explicação longa " * 60)
+        self.assertNotIn("TAMANHO-copy", self._codigos(texto))
+
+
+class TestBlocosDeCopy(unittest.TestCase):
+    def _blocos(self, texto):
+        return [t for _, t in blocos_de_copy(linhas_de_copy(texto))]
+
+    def test_junta_paragrafos_do_mesmo_cabecalho(self):
+        self.assertEqual(self._blocos("## A\n\num\n\ndois\n"), ["um dois"])
+
+    def test_cabecalho_separa(self):
+        self.assertEqual(self._blocos("## A\n\num\n\n## B\n\ndois\n"), ["um", "dois"])
+
+    def test_tira_rotulo_de_bloco(self):
+        self.assertEqual(self._blocos("**SOLUÇÃO**\n\nO texto.\n"), ["O texto."])
+
+    def test_tira_metadado(self):
+        texto = "**Gatilho:** Desejo\n**CTA do botão Meta Ads:** Cadastre-se\n\nO texto.\n"
+        self.assertEqual(self._blocos(texto), ["O texto."])
+
+    def test_tira_citacao_e_tabela(self):
+        self.assertEqual(self._blocos("> procedência\n\n| a | b |\n\nO texto.\n"), ["O texto."])
+
+    def test_tira_a_marcacao_do_texto(self):
+        self.assertEqual(self._blocos("O **texto** com `marca`.\n"), ["O texto com marca."])
 
 
 class TestLinhasDeCopy(unittest.TestCase):
