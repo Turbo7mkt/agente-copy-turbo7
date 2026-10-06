@@ -14,12 +14,52 @@ const RAIZ = fileURLToPath(new URL("../..", import.meta.url));
 const fonte = readFileSync(RAIZ + "scripts/planilha/gravar-copy.gs", "utf8");
 
 // As APIs do Google só são tocadas dentro das funções, então basta existirem.
-const escopo = { SpreadsheetApp: {}, PropertiesService: {}, LockService: {}, Utilities: {}, Logger: {}, ContentService: {} };
-const fabricar = new Function(
-  ...Object.keys(escopo),
-  fonte + "\nreturn { proximoId, iniciais, normalizar, COL };"
-);
-const { proximoId, iniciais, normalizar, COL } = fabricar(...Object.values(escopo));
+/* A planilha dublada: guarda o que foi escrito, para a asserção ser sobre a
+   linha que realmente entraria em BASE_CRIATIVOS. */
+const gravado = { linhas: [], primeira: 0 };
+
+function montarEscopo(linhasExistentes) {
+  const largura = 14;
+  const aba = {
+    getSheetId: () => 0,
+    getLastRow: () => linhasExistentes.length + 1,
+    getRange: (linha, coluna, nLinhas, nCols) => ({
+      getValues: () =>
+        linhasExistentes.map((l) => {
+          const cheia = new Array(nCols || largura).fill("");
+          cheia[0] = l.cliente;
+          cheia[11] = l.id; // COL.id - COL.cliente
+          return cheia;
+        }),
+      setValues: (m) => { gravado.primeira = linha; gravado.linhas = m; },
+      getFormula: () => "",
+      copyTo: () => {},
+    }),
+  };
+  return {
+    SpreadsheetApp: {
+      getActiveSpreadsheet: () => ({
+        getSheetByName: () => aba,
+        getSpreadsheetTimeZone: () => "America/Sao_Paulo",
+        getUrl: () => "https://exemplo/planilha",
+      }),
+    },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: () => "tok" }) },
+    LockService: {},
+    Utilities: { formatDate: (d) => `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}` },
+    Logger: {},
+    ContentService: {},
+  };
+}
+
+function carregar(escopo) {
+  return new Function(
+    ...Object.keys(escopo),
+    fonte + "\nreturn { proximoId, serieDoCliente, iniciais, normalizar, gravar, dataEmDiasUteis, COL };"
+  )(...Object.values(escopo));
+}
+
+const { proximoId, iniciais, normalizar, COL } = carregar(montarEscopo([]));
 
 /** Dubla a aba: `linhas` é [[Cliente, …, ID do Criativo], …] a partir da linha 2. */
 function abaFalsa(linhas) {
@@ -102,6 +142,67 @@ t("o maior vence, não o último", () =>
     { cliente: "QG ITALÍNEA", id: "QGI0020" },
     { cliente: "QG ITALÍNEA", id: "QGI0003" },
   ]), "QG ITALÍNEA"), "QGI0021"));
+
+/* --- Lote: uma entrega de N copies vira N linhas, não uma --- */
+
+function gravarLote(linhasExistentes, corpo) {
+  gravado.linhas = [];
+  const api = carregar(montarEscopo(linhasExistentes));
+  const r = api.gravar(corpo);
+  return { r, escritas: gravado.linhas, primeira: gravado.primeira };
+}
+
+const BASE = [
+  { cliente: "ATLÂNTICA ITALÍNEA", id: "AI0004" },
+  { cliente: "CAMMINARE ITALÍNEA", id: "CI0002" },
+];
+const TRES = {
+  cliente: "ATLÂNTICA ITALÍNEA", gestor: "Thiago", responsavel: "Gabriel", prazoDias: 3,
+  linhas: [
+    { tipo: "Vídeo", copy: "peça 1", status: "Copy em Aprovação" },
+    { tipo: "Vídeo", copy: "peça 2", status: "Copy em Aprovação" },
+    { tipo: "Carrossel", copy: "peça 3", status: "Copy em Aprovação" },
+  ],
+};
+
+t("três peças viram três linhas", () =>
+  assert.equal(gravarLote(BASE, TRES).escritas.length, 3));
+
+t("os IDs do lote são sequenciais e continuam a série do cliente", () =>
+  assert.deepEqual(gravarLote(BASE, TRES).r.ids, ["AI0005", "AI0006", "AI0007"]));
+
+t("cada linha leva o seu próprio tipo de criativo", () =>
+  assert.deepEqual(
+    gravarLote(BASE, TRES).escritas.map((l) => l[COL.tipo - 1]),
+    ["Vídeo", "Vídeo", "Carrossel"]));
+
+t("gestor, responsável e cliente se repetem em todas", () => {
+  const e = gravarLote(BASE, TRES).escritas;
+  assert.ok(e.every((l) => l[COL.cliente - 1] === "ATLÂNTICA ITALÍNEA"
+    && l[COL.gestor - 1] === "Thiago" && l[COL.responsavel - 1] === "Gabriel"));
+});
+
+t("`Para ser Entregue Em` deixa de sair em branco", () =>
+  assert.ok(gravarLote(BASE, TRES).escritas.every((l) => /^\d{2}\/\d{2}\/\d{4}$/.test(l[COL.prazo - 1]))));
+
+t("o SLA é contado em dias úteis, pulando o fim de semana", () => {
+  const api = carregar(montarEscopo([]));
+  const [d, m, a] = api.dataEmDiasUteis(3).split("/").map(Number);
+  const alvo = new Date(a, m - 1, d);
+  assert.ok(alvo.getDay() !== 0 && alvo.getDay() !== 6, "caiu no fim de semana");
+  assert.ok(alvo > new Date(), "a data precisa estar no futuro");
+});
+
+t("o formato antigo de uma copy só continua gravando", () => {
+  const r = gravarLote(BASE, { cliente: "ATLÂNTICA ITALÍNEA", linhas: [{ copy: "só uma" }] });
+  assert.equal(r.escritas.length, 1);
+  assert.equal(r.r.id, "AI0005");
+});
+
+t("cliente sem série ainda começa em 0001, mesmo em lote", () =>
+  assert.deepEqual(
+    gravarLote(BASE, { cliente: "CASA & COZINHA ITALÍNEA", linhas: [{ copy: "a" }, { copy: "b" }] }).r.ids,
+    ["CCI0001", "CCI0002"]));
 
 console.log(`${ok} passaram, ${falhas.length} falharam`);
 for (const f of falhas) console.log("  ✗ " + f);

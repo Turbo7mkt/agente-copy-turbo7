@@ -44,23 +44,41 @@ usar configura o seu, uma vez, no próprio navegador.
 Se um token vazar: rode `configurarToken` de novo. O antigo para de funcionar
 na hora, e é só reconfigurar o painel.
 
-## O que a linha carrega
+## Uma linha por criativo, não por entrega
 
-Vai para a aba `BASE_CRIATIVOS`, no fim:
+Uma entrega de 10 copies são **10 criativos**, e a `BASE_CRIATIVOS` é uma linha
+por criativo, com um `ID do Criativo` cada. Gravar tudo numa linha só jogava
+fora a unidade que a planilha usa para medir SLA e, mais tarde, atribuição.
+
+O painel corta a entrega no **cabeçalho mais fundo que aparece**: dez
+`## ÂNGULO 1..10` viram dez peças; um `## ÂNGULO` com quatro `### Vídeo 1..4`
+vira as quatro peças de dentro. O tipo sai do que o texto diz ser — "carrossel"
+e "cards" antes de "vídeo", porque um card pode citar vídeo e o contrário não
+acontece.
+
+Fatiar texto de modelo nunca acerta sempre. Por isso o resultado aparece numa
+**prévia no passo 05**, com o tipo editável por linha e um ✕ para tirar o que
+não é criativo. O gestor confere antes de gravar.
+
+## O que cada coluna carrega
 
 | Coluna | Vem de |
 | --- | --- |
-| `Cliente` | o nome que a planilha já usa (escolhido no passo 07, lembrado por cliente) |
-| `Gestor`, `Responsável`, `Tipo de Criativo` | a configuração do passo 07 |
+| `Cliente` | o nome que a planilha já usa (passo 07, lembrado por cliente) |
+| `Gestor` | **o briefing da loja** — Mobile Prime é do Davi, as outras da Micheli. A configuração do painel só entra quando o briefing não diz |
+| `Responsável` | a configuração do passo 07 |
 | `Data Solicitação` | hoje, no fuso da planilha |
-| `Copy` | o markdown inteiro, com cabeçalho de ângulo e procedência |
+| `Para ser Entregue Em` | Data Solicitação + o SLA do passo 07, em **dias úteis** (padrão 3) |
+| `Tipo de Criativo` | deduzido do texto da peça, corrigível na prévia |
+| `Copy` | o texto daquela peça, não a entrega inteira |
 | `Status` | `Copy em Aprovação` se passou no linter, `Em Revisão` se não |
-| `ID do Criativo` | próximo da sequência **daquele cliente** (`AI0004` → `AI0005`) |
+| `ID do Criativo` | sequência **daquele cliente**, um por peça (`AI0005`, `AI0006`, …) |
 | `Observações` | que veio do painel e qual foi o veredito do linter |
 | `Dias em Aberto`, `Dias Em Atraso` | fórmula herdada da linha de cima |
+| `Entregue Em`, `Quem Gravou o audio` | em branco — quem preenche é a produção |
 
-O `ID do Criativo` é gerado com trava (`LockService`), então duas abas do painel
-gravando ao mesmo tempo não pegam o mesmo número.
+Os IDs do lote inteiro saem sob uma trava só (`LockService`), então duas abas
+do painel gravando ao mesmo tempo não colidem no meio da sequência.
 
 Cliente que ainda não tem linha nenhuma ganha prefixo pelas iniciais
 (`CASA & COZINHA ITALÍNEA` → `CCI0001`).
@@ -79,13 +97,17 @@ copy e resultado passa a sair sozinho. Ver
 ## Testes
 
 ```bash
-node scripts/tests/test_gravar_copy.mjs
+node scripts/tests/test_gravar_copy.mjs    # 22 — IDs, lote, SLA em dias úteis
+node scripts/tests/test_fatiar_entrega.mjs # 13 — corte em peças e tipo
 ```
 
-14 testes da geração de `ID do Criativo`, contra os IDs que existem hoje na
-planilha — incluindo `DP 0013` com espaço e o nome `DIANA PLANEJADOS  ITALÍNEA`
-com espaço duplo.
+Os IDs são testados contra os que existem hoje na planilha, incluindo
+`DP 0013` com espaço e o nome `DIANA PLANEJADOS  ITALÍNEA` com espaço duplo.
+O corte em peças é testado contra a distribuição de `formatos-entrega.md`:
+10 copies saem como 7 vídeo, 2 foto e 1 carrossel.
 
 A ligação painel → script foi exercitada num Chromium de verdade contra um
 dublê do Web App: configuração, *Testar conexão*, correção do nome do cliente,
-POST, e a checagem de que o token **não** aparece no HTML da página.
+corte de uma entrega de 10 copies em 10 peças (7 vídeo · 2 foto · 1 carrossel),
+POST do lote com 10 IDs sequenciais, e a checagem de que o token **não**
+aparece no HTML da página.

@@ -74,7 +74,19 @@ function doPost(requisicao) {
     if (corpo.token !== esperado) return responder({ ok: false, erro: 'Token inválido.' });
 
     if (!corpo.cliente) return responder({ ok: false, erro: 'Falta o cliente.' });
-    if (!corpo.copy) return responder({ ok: false, erro: 'Falta a copy.' });
+
+    // Uma entrega de 10 copies são 10 criativos, e a planilha é uma linha por
+    // criativo. O painel manda `linhas`; o formato antigo de uma copy só
+    // continua aceito para não quebrar implantação já em uso.
+    var linhas = corpo.linhas;
+    if (!linhas && corpo.copy) {
+      linhas = [{ tipo: corpo.tipo, copy: corpo.copy, status: corpo.status, observacoes: corpo.observacoes }];
+    }
+    if (!linhas || !linhas.length) return responder({ ok: false, erro: 'Nenhuma copy para gravar.' });
+    for (var i = 0; i < linhas.length; i++) {
+      if (!linhas[i].copy) return responder({ ok: false, erro: 'Copy vazia na peça ' + (i + 1) + '.' });
+    }
+    corpo.linhas = linhas;
 
     // Trava para duas abas do painel não pegarem o mesmo ID.
     const trava = LockService.getScriptLock();
@@ -90,33 +102,63 @@ function doPost(requisicao) {
 }
 
 function gravar(corpo) {
-  const aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ABA);
+  const planilha = SpreadsheetApp.getActiveSpreadsheet();
+  const aba = planilha.getSheetByName(ABA);
   if (!aba) return { ok: false, erro: 'Aba ' + ABA + ' não encontrada.' };
 
-  const id = proximoId(aba, corpo.cliente);
-  const linha = aba.getLastRow() + 1;
+  const serie = serieDoCliente(aba, corpo.cliente);
+  const solicitacao = hoje();
+  // `Para ser Entregue Em` ficava em branco e quebrava `Dias Em Atraso`.
+  // O painel manda o SLA em dias úteis; sem ele, o padrão da casa é 3.
+  const prazo = corpo.prazo || dataEmDiasUteis(corpo.prazoDias == null ? 3 : corpo.prazoDias);
 
-  const valores = new Array(TOTAL_COLUNAS).fill('');
-  valores[COL.cliente - 1] = corpo.cliente;
-  valores[COL.gestor - 1] = corpo.gestor || '';
-  valores[COL.solicitacao - 1] = hoje();
-  valores[COL.prazo - 1] = corpo.prazo || '';
-  valores[COL.responsavel - 1] = corpo.responsavel || '';
-  valores[COL.tipo - 1] = corpo.tipo || 'Vídeo';
-  valores[COL.copy - 1] = corpo.copy;
-  valores[COL.status - 1] = corpo.status || 'Copy em Aprovação';
-  valores[COL.id - 1] = id;
-  valores[COL.obs - 1] = corpo.observacoes || '';
+  const primeira = aba.getLastRow() + 1;
+  const matriz = [];
+  const ids = [];
 
-  aba.getRange(linha, 1, 1, TOTAL_COLUNAS).setValues([valores]);
-  herdarFormulas(aba, linha);
+  for (var i = 0; i < corpo.linhas.length; i++) {
+    const peca = corpo.linhas[i];
+    const id = serie.prefixo + String(serie.maior + 1 + i).padStart(serie.digitos, '0');
+    ids.push(id);
+
+    const valores = new Array(TOTAL_COLUNAS).fill('');
+    valores[COL.cliente - 1] = corpo.cliente;
+    valores[COL.gestor - 1] = corpo.gestor || '';
+    valores[COL.solicitacao - 1] = solicitacao;
+    valores[COL.prazo - 1] = prazo;
+    valores[COL.responsavel - 1] = corpo.responsavel || '';
+    valores[COL.tipo - 1] = peca.tipo || 'Vídeo';
+    valores[COL.copy - 1] = peca.copy;
+    valores[COL.status - 1] = peca.status || 'Copy em Aprovação';
+    valores[COL.id - 1] = id;
+    valores[COL.obs - 1] = peca.observacoes || '';
+    matriz.push(valores);
+  }
+
+  aba.getRange(primeira, 1, matriz.length, TOTAL_COLUNAS).setValues(matriz);
+  for (var j = 0; j < matriz.length; j++) herdarFormulas(aba, primeira + j);
 
   return {
     ok: true,
-    id: id,
-    linha: linha,
-    url: SpreadsheetApp.getActiveSpreadsheet().getUrl() + '#gid=' + aba.getSheetId() + '&range=A' + linha,
+    ids: ids,
+    id: ids[0],                       // compatibilidade com o formato antigo
+    linha: primeira,
+    linhas: matriz.length,
+    prazo: prazo,
+    url: planilha.getUrl() + '#gid=' + aba.getSheetId() + '&range=A' + primeira,
   };
+}
+
+/** Dia útil N dias à frente, pulando sábado e domingo. */
+function dataEmDiasUteis(n) {
+  const fuso = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+  const d = new Date();
+  var contados = 0;
+  while (contados < n) {
+    d.setDate(d.getDate() + 1);
+    if (d.getDay() !== 0 && d.getDay() !== 6) contados++;
+  }
+  return Utilities.formatDate(d, fuso, 'dd/MM/yyyy');
 }
 
 /**
@@ -125,28 +167,33 @@ function gravar(corpo) {
  *
  * Cliente novo, sem linha nenhuma: prefixo pelas iniciais, começando em 0001.
  */
-function proximoId(aba, cliente) {
+function serieDoCliente(aba, cliente) {
   const ultima = aba.getLastRow();
-  if (ultima < 2) return iniciais(cliente) + '0001';
-
-  const dados = aba.getRange(2, COL.cliente, ultima - 1, COL.id - COL.cliente + 1).getValues();
-  const alvo = normalizar(cliente);
   let prefixo = '';
   let maior = 0;
   let digitos = 4;
 
-  for (const linha of dados) {
-    if (normalizar(linha[0]) !== alvo) continue;
-    const bruto = String(linha[COL.id - COL.cliente] || '').trim();
-    const partes = bruto.match(/^([A-Za-zÀ-ÿ]+)\s*(\d+)$/);
-    if (!partes) continue;
-    prefixo = partes[1].toUpperCase();
-    digitos = Math.max(digitos, partes[2].length);
-    maior = Math.max(maior, parseInt(partes[2], 10));
+  if (ultima >= 2) {
+    const dados = aba.getRange(2, COL.cliente, ultima - 1, COL.id - COL.cliente + 1).getValues();
+    const alvo = normalizar(cliente);
+    for (const linha of dados) {
+      if (normalizar(linha[0]) !== alvo) continue;
+      const bruto = String(linha[COL.id - COL.cliente] || '').trim();
+      const partes = bruto.match(/^([A-Za-zÀ-ÿ]+)\s*(\d+)$/);
+      if (!partes) continue;
+      prefixo = partes[1].toUpperCase();
+      digitos = Math.max(digitos, partes[2].length);
+      maior = Math.max(maior, parseInt(partes[2], 10));
+    }
   }
 
   if (!prefixo) prefixo = iniciais(cliente);
-  return prefixo + String(maior + 1).padStart(digitos, '0');
+  return { prefixo: prefixo, maior: maior, digitos: digitos };
+}
+
+function proximoId(aba, cliente) {
+  const s = serieDoCliente(aba, cliente);
+  return s.prefixo + String(s.maior + 1).padStart(s.digitos, '0');
 }
 
 /** "CASA & COZINHA ITALÍNEA" → "CCI". Ignora "&", "DE", "DA" e afins. */
