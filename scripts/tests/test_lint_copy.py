@@ -232,6 +232,23 @@ class TestTamanho(unittest.TestCase):
         texto = "**Título:** Comece por um ambiente. A casa inteira agradece depois.\n"
         self.assertIn("TAMANHO-titulo", self._codigos(texto))
 
+    def test_titulo_anotado_com_a_contagem_nao_reprova(self):
+        """Caso real do Casa & Cozinha em 05/10: o modelo anota o que contou."""
+        self.assertNotIn("TAMANHO-titulo",
+                         self._codigos("**TÍTULO (35):** Você aprova antes de ir pra produção\n"))
+
+    def test_descricao_anotada_com_a_contagem_nao_reprova(self):
+        self.assertNotIn("TAMANHO-descricao",
+                         self._codigos("**DESCRIÇÃO (25):** Medição, 3D e acabamentos\n"))
+
+    def test_anotacao_depois_dos_dois_pontos_tambem_sai(self):
+        self.assertNotIn("TAMANHO-titulo",
+                         self._codigos("**Título:** (35) Você aprova antes de ir pra produção\n"))
+
+    def test_anotado_e_longo_de_verdade_ainda_reprova(self):
+        texto = "**TÍTULO (55):** Comece por um ambiente. A casa inteira agradece depois.\n"
+        self.assertIn("TAMANHO-titulo", self._codigos(texto))
+
     def test_titulo_nao_conta_a_marcacao(self):
         # 38 caracteres de texto, 42 com os asteriscos. Quem lê não vê asterisco.
         texto = "**Título:** **Projeto que cabe no seu prazo**\n"

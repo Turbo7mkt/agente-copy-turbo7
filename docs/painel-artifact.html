@@ -429,8 +429,12 @@ const MAX_TITULO = 40;
 const MAX_DESCRICAO = 30;
 const MAX_COPY = 400;
 
-const TITULO = /^\s*(?:[-*]\s*)?\**\s*t[íi]tulo\s*:?\**\s*:?\s*(.+)$/i;
-const DESCRICAO = /^\s*(?:[-*]\s*)?\**\s*descri[çc][ãa]o\s*:?\**\s*:?\s*(.+)$/i;
+/* O rótulo costuma vir anotado com a própria contagem — "**DESCRIÇÃO (25):**" —
+   porque o pedido cita o limite e o modelo mostra que respeitou. Contar essa
+   anotação reprova a peça que se comportou bem. `[^:]{0,24}` a engole. */
+const TITULO = /^\s*(?:[-*]\s*)?\**\s*t[íi]tulo\b[^:]{0,24}:\**\s*(.+)$/i;
+const DESCRICAO = /^\s*(?:[-*]\s*)?\**\s*descri[çc][ãa]o\b[^:]{0,24}:\**\s*(.+)$/i;
+const ANOTACAO = /^\(\s*\d+\s*(?:caracteres?|car\.?)?\s*\)\s*:?\s*/i;
 
 const CABECALHO = /^\s*#{1,6}\s/;
 const ESTRUTURA = /^\s*(?:>\s|\||---|===|\*\*\*)/;
@@ -496,7 +500,7 @@ function lintar(texto, usaPreco) {
     ]) {
       const achadoCampo = re.exec(linha);
       if (!achadoCampo) continue;
-      const conteudo = limparMarcacao(achadoCampo[1]);
+      const conteudo = limparMarcacao(achadoCampo[1]).replace(ANOTACAO, "").trim();
       if (conteudo.length > limite) {
         achados.push({ linha: n, codigo, desc: `${rotulo} com ${conteudo.length} caracteres (o Meta exibe ${limite})`, trecho: conteudo.slice(0, 60) });
       }

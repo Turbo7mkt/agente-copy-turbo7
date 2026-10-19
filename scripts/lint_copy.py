@@ -70,8 +70,16 @@ MAX_TITULO = 40
 MAX_DESCRICAO = 30
 MAX_COPY = 400
 
-TITULO_RE = re.compile(r"^\s*(?:[-*]\s*)?\**\s*t[íi]tulo\s*:?\**\s*:?\s*(.+)$", re.IGNORECASE)
-DESCRICAO_RE = re.compile(r"^\s*(?:[-*]\s*)?\**\s*descri[çc][ãa]o\s*:?\**\s*:?\s*(.+)$", re.IGNORECASE)
+# O rótulo costuma vir anotado com a própria contagem — "**DESCRIÇÃO (25):**" —
+# porque o pedido cita o limite e o modelo mostra que respeitou. Contar essa
+# anotação como se fosse texto do anúncio reprova a peça que se comportou bem,
+# igual ao que a nota de conformidade fazia antes de a3d030a.
+# `[^:]{0,24}` engole o " (25)" e os asteriscos antes dos dois-pontos.
+TITULO_RE = re.compile(r"^\s*(?:[-*]\s*)?\**\s*t[íi]tulo\b[^:]{0,24}:\**\s*(.+)$", re.IGNORECASE)
+DESCRICAO_RE = re.compile(r"^\s*(?:[-*]\s*)?\**\s*descri[çc][ãa]o\b[^:]{0,24}:\**\s*(.+)$", re.IGNORECASE)
+
+# E a anotação depois dos dois-pontos: "**Título:** (35) Você aprova…".
+ANOTACAO_RE = re.compile(r"^\(\s*\d+\s*(?:caracteres?|car\.?)?\s*\)\s*:?\s*", re.IGNORECASE)
 
 # Cabeçalho: abre uma copy nova. Cada uma tem o seu próprio orçamento de texto.
 CABECALHO_RE = re.compile(r"^\s*#{1,6}\s")
@@ -320,7 +328,7 @@ def verificar(arquivo: Path, permitir_preco: bool) -> list[Achado]:
             achado_campo = regex.match(linha)
             if not achado_campo:
                 continue
-            conteudo = _limpar_marcacao(achado_campo.group(1))
+            conteudo = ANOTACAO_RE.sub("", _limpar_marcacao(achado_campo.group(1))).strip()
             if len(conteudo) > limite:
                 achados.append(
                     Achado(

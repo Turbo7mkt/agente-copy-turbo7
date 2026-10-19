@@ -86,6 +86,12 @@ t("título curto passa", () =>
   assert.ok(!codigos("**Título:** Comece por um ambiente", true).includes("TAMANHO-titulo")));
 t("caso real Mhavi 05/10 — título de 55 caracteres reprova", () =>
   assert.ok(codigos("**Título:** Comece por um ambiente. A casa inteira agradece depois.", true).includes("TAMANHO-titulo")));
+t("caso real 05/10 — título anotado com a contagem não reprova", () =>
+  assert.ok(!codigos("**TÍTULO (35):** Você aprova antes de ir pra produção", true).includes("TAMANHO-titulo")));
+t("caso real 05/10 — descrição anotada não reprova", () =>
+  assert.ok(!codigos("**DESCRIÇÃO (25):** Medição, 3D e acabamentos", true).includes("TAMANHO-descricao")));
+t("anotado e longo de verdade ainda reprova", () =>
+  assert.ok(codigos("**TÍTULO (55):** Comece por um ambiente. A casa inteira agradece depois.", true).includes("TAMANHO-titulo")));
 t("título não conta a marcação", () =>
   assert.ok(!codigos("**Título:** **Projeto que cabe no seu prazo**", true).includes("TAMANHO-titulo")));
 t("caso real Mhavi 05/10 — descrição de 50 caracteres reprova", () =>
